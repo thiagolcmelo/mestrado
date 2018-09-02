@@ -283,47 +283,25 @@
     \hypertarget{pacote-de-onda-plana}{%
 \section{Pacote de Onda Plana}\label{pacote-de-onda-plana}}
 
-Neste \emph{notebook} verificamos a qualidade da evolução temporal de um
-pocate de onda gaussiano feita por três diferentes métodos numéricos:
-
-\begin{itemize}
-\tightlist
-\item
-  Pseudo-Espectral (\emph{Split-Step FFT})
-\item
-  Runge-Kutta
-\item
-  Crank-Nicolson
-\end{itemize}
-
-O pacote de onda gaussiano é do tipo:
-
-\[
-\Psi(z,t) = \frac{1}{ \sqrt[4]{ 2 \pi {\sigma_z}^2 }} \exp \left( i k_0 z - \frac{{\left( z - z_0 \right)}^2}{4 {\left(\sigma_z \right)}^2} \right)
-\]
-
-Onde \(k_0\) é o momento inicial, determinado pela energia do pacote:
-
-\[
-E_0 = \frac{\hbar^2 k_0^2}{2 m} \rightarrow k_0 = \sqrt{\frac{2m E_0}{\hbar^2}}
-\]
-
-A evolução temporal analítica pode ser dada por:
-
-\[
-\Psi(z,t) = \displaystyle\int_{-\infty}^{+\infty} \mathcal{F}[\Psi(z,0)] \, e^{i \varphi(k,t)} \, dk
-\]
-
-onde \$ \mathcal{F}{[}\Psi(z,0){]}\$ é a transformada de Fourier de
-\(\Psi(z,0)\) e \(\varphi(k,t)=kz-\omega(k) \,t\).
-
     \hypertarget{bibliotecas-utilizadas}{%
 \subsection{Bibliotecas utilizadas}\label{bibliotecas-utilizadas}}
 
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}1}]:} \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
+{\color{incolor}In [{\color{incolor}1}]:} \PY{c+c1}{\PYZsh{} python standard}
+        \PY{k+kn}{import} \PY{n+nn}{os}\PY{o}{,} \PY{n+nn}{time}
+        \PY{c+c1}{\PYZsh{} from multiprocessing import Pool, TimeoutError}
+        
+        \PY{c+c1}{\PYZsh{} third\PYZhy{}party}
+        \PY{k+kn}{import} \PY{n+nn}{numpy} \PY{k}{as} \PY{n+nn}{np}
         \PY{k+kn}{import} \PY{n+nn}{pandas} \PY{k}{as} \PY{n+nn}{pd}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{integrate} \PY{k}{import} \PY{n}{simps}
+        \PY{k+kn}{import} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{constants} \PY{k}{as} \PY{n+nn}{cte}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{sparse} \PY{k}{import} \PY{n}{diags}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{linalg} \PY{k}{import} \PY{n}{inv}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{fftpack} \PY{k}{import} \PY{n}{fft}\PY{p}{,} \PY{n}{ifft}\PY{p}{,} \PY{n}{fftfreq}
         \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{stats} \PY{k}{import} \PY{n}{norm}\PY{p}{,} \PY{n}{skewnorm}
+        \PY{k+kn}{from} \PY{n+nn}{scipy}\PY{n+nn}{.}\PY{n+nn}{spatial}\PY{n+nn}{.}\PY{n+nn}{distance} \PY{k}{import} \PY{n}{cdist}
+        \PY{k+kn}{from} \PY{n+nn}{sklearn}\PY{n+nn}{.}\PY{n+nn}{preprocessing} \PY{k}{import} \PY{n}{StandardScaler}
 \end{Verbatim}
 
 
@@ -332,25 +310,21 @@ onde \$ \mathcal{F}{[}\Psi(z,0){]}\$ é a transformada de Fourier de
 gráficas}\label{configurauxe7uxf5es-gruxe1ficas}}
 
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}12}]:} \PY{k+kn}{import} \PY{n+nn}{locale}
-         \PY{n}{locale}\PY{o}{.}\PY{n}{setlocale}\PY{p}{(}\PY{n}{locale}\PY{o}{.}\PY{n}{LC\PYZus{}NUMERIC}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{pt\PYZus{}BR.UTF\PYZhy{}8}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         
-         \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
-         \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{axes.formatter.use\PYZus{}locale}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{k+kc}{True}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{savefig.dpi}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{100}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{figure.dpi}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{100}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{figure.autolayout}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{k+kc}{False}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{figure.figsize}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{p}{(}\PY{l+m+mf}{11.69}\PY{p}{,}\PY{l+m+mf}{8.27}\PY{p}{)}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{axes.labelsize}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{18}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{axes.titlesize}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{22}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{font.size}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{20}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{lines.linewidth}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mf}{1.5}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{lines.markersize}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{8}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{scatter.marker}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{.}\PY{l+s+s1}{\PYZsq{}}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{rcParams}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{legend.fontsize}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{l+m+mi}{20}
-         \PY{c+c1}{\PYZsh{} plt.rcParams[\PYZsq{}text.usetex\PYZsq{}]=True}
-         \PY{c+c1}{\PYZsh{} plt.rcParams[\PYZsq{}text.latex.unicode\PYZsq{}]=True}
+{\color{incolor}In [{\color{incolor}4}]:} \PY{k+kn}{import} \PY{n+nn}{locale}
+        \PY{n}{locale}\PY{o}{.}\PY{n}{setlocale}\PY{p}{(}\PY{n}{locale}\PY{o}{.}\PY{n}{LC\PYZus{}NUMERIC}\PY{p}{,} \PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{pt\PYZus{}BR.UTF\PYZhy{}8}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{style}
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib} \PY{k}{as} \PY{n+nn}{mpl}
+        \PY{n}{mpl}\PY{o}{.}\PY{n}{style}\PY{o}{.}\PY{n}{use}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{classic}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        
+        \PY{o}{\PYZpc{}}\PY{k}{matplotlib} inline
+        \PY{k+kn}{import} \PY{n+nn}{matplotlib}\PY{n+nn}{.}\PY{n+nn}{pyplot} \PY{k}{as} \PY{n+nn}{plt}
+        \PY{n}{plt}\PY{o}{.}\PY{n}{style}\PY{o}{.}\PY{n}{use}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{mestrado}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        
+        \PY{c+c1}{\PYZsh{} import matplotlib}
+        \PY{c+c1}{\PYZsh{} import matplotlib.pyplot as plt}
+        \PY{c+c1}{\PYZsh{} print(plt.style.available)}
+        \PY{c+c1}{\PYZsh{} print(matplotlib.get\PYZus{}configdir())}
 \end{Verbatim}
 
 
@@ -358,34 +332,36 @@ gráficas}\label{configurauxe7uxf5es-gruxe1ficas}}
 \subsection{Parâmetros de qualidade}\label{paruxe2metros-de-qualidade}}
 
     \begin{Verbatim}[commandchars=\\\{\}]
-{\color{incolor}In [{\color{incolor}13}]:} \PY{n}{x} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{1000}\PY{p}{)}
-         \PY{n}{df} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{p}{\PYZob{}}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}\PY{n}{x}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{low\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{normal\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{high\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{4.0}\PY{p}{)}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{negative\PYZus{}skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zero\PYZus{}snewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
-             \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{positive\PYZus{}skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}
-         \PY{p}{\PYZcb{}}\PY{p}{)}
-         \PY{c+c1}{\PYZsh{}df.to\PYZus{}csv(\PYZsq{}comparacao\PYZus{}desvio\PYZus{}padrao\PYZus{}obliquidade.csv\PYZsq{})}
-         \PY{n}{f}\PY{p}{,} \PY{p}{(}\PY{p}{(}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{,} \PY{n}{ax3}\PY{p}{)}\PY{p}{,} \PY{p}{(}\PY{n}{ax4}\PY{p}{,} \PY{n}{ax5}\PY{p}{,} \PY{n}{ax6}\PY{p}{)}\PY{p}{)} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
-         \PY{n}{mean}\PY{p}{,} \PY{n}{var}\PY{p}{,} \PY{n}{skew}\PY{p}{,} \PY{n}{kurt} \PY{o}{=} \PY{n}{norm}\PY{o}{.}\PY{n}{stats}\PY{p}{(}\PY{n}{moments}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{mvsk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax1}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax1}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma \PYZlt{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         \PY{n}{ax2}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax2}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma = }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         \PY{n}{ax3}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{4.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax3}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma \PYZgt{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         
-         \PY{n}{ax4}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax4}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma \PYZlt{} 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         \PY{n}{ax5}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax5}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma = 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         \PY{n}{ax6}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
-         \PY{n}{ax6}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma \PYZgt{} 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
-         \PY{c+c1}{\PYZsh{}plt.savefig(\PYZsq{}comparacao\PYZus{}desvpad\PYZus{}obliquidade.png\PYZsq{}, bbox\PYZus{}inches=\PYZsq{}tight\PYZsq{})}
-         \PY{n}{plt}\PY{o}{.}\PY{n}{show}\PY{p}{(}\PY{p}{)}
+{\color{incolor}In [{\color{incolor}6}]:} \PY{n}{x} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{10}\PY{p}{,} \PY{l+m+mi}{1000}\PY{p}{)}
+        \PY{n}{df} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{p}{\PYZob{}}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{x}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{low\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{normal\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{high\PYZus{}standard\PYZus{}deviation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{4.0}\PY{p}{)}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{negative\PYZus{}skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zero\PYZus{}snewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+            \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{positive\PYZus{}skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}
+        \PY{p}{\PYZcb{}}\PY{p}{)}
+        
+        \PY{n}{f}\PY{p}{,} \PY{p}{(}\PY{p}{(}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{,} \PY{n}{ax3}\PY{p}{)}\PY{p}{,} \PY{p}{(}\PY{n}{ax4}\PY{p}{,} \PY{n}{ax5}\PY{p}{,} \PY{n}{ax6}\PY{p}{)}\PY{p}{)} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{2}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        \PY{n}{mean}\PY{p}{,} \PY{n}{var}\PY{p}{,} \PY{n}{skew}\PY{p}{,} \PY{n}{kurt} \PY{o}{=} \PY{n}{norm}\PY{o}{.}\PY{n}{stats}\PY{p}{(}\PY{n}{moments}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{mvsk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax1}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{0.5}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax1}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma \PYZlt{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        \PY{n}{ax2}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax2}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma = }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        \PY{n}{ax3}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{norm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{4.0}\PY{p}{)}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax3}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma \PYZgt{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        
+        \PY{n}{ax4}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax4}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma \PYZlt{} 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        \PY{n}{ax5}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{0}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax5}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma = 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        \PY{n}{ax6}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{skewnorm}\PY{o}{.}\PY{n}{pdf}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{0}\PY{p}{,} \PY{n}{scale}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{)}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r\PYZhy{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{alpha}\PY{o}{=}\PY{l+m+mf}{0.6}\PY{p}{,} \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{norm pdf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax6}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{8}\PY{p}{,} \PY{l+m+mf}{0.6}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma \PYZgt{} 0\PYZdl{}}\PY{l+s+s2}{\PYZdq{}}\PY{p}{)}
+        \PY{n}{plt}\PY{o}{.}\PY{n}{savefig}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{comparacao\PYZus{}desvpad\PYZus{}obliquidade.png}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
 \end{Verbatim}
 
 
@@ -394,6 +370,643 @@ gráficas}\label{configurauxe7uxf5es-gruxe1ficas}}
     \end{center}
     { \hspace*{\fill} \\}
     
+    \hypertarget{constantes-fuxedsicas}{%
+\subsection{Constantes físicas}\label{constantes-fuxedsicas}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}7}]:}  \PY{c+c1}{\PYZsh{} grandezas de interesse em unidades atomicas}
+        \PY{n}{au\PYZus{}l} \PY{o}{=} \PY{n}{cte}\PY{o}{.}\PY{n}{value}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{atomic unit of length}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{au\PYZus{}t} \PY{o}{=} \PY{n}{cte}\PY{o}{.}\PY{n}{value}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{atomic unit of time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{au\PYZus{}e} \PY{o}{=} \PY{n}{cte}\PY{o}{.}\PY{n}{value}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{atomic unit of energy}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        
+        \PY{c+c1}{\PYZsh{} outras relacoes de interesse}
+        \PY{n}{ev} \PY{o}{=} \PY{n}{cte}\PY{o}{.}\PY{n}{value}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{electron volt}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{au2ang} \PY{o}{=} \PY{n}{au\PYZus{}l} \PY{o}{/} \PY{l+m+mf}{1e\PYZhy{}10}
+        \PY{n}{au2ev} \PY{o}{=} \PY{n}{au\PYZus{}e} \PY{o}{/} \PY{n}{ev}
+\end{Verbatim}
+
+
+    \hypertarget{funuxe7uxf5es-uxfateis}{%
+\subsection{Funções úteis}\label{funuxe7uxf5es-uxfateis}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}8}]:} \PY{k}{def} \PY{n+nf}{dummy\PYZus{}comma}\PY{p}{(}\PY{n}{str\PYZus{}number}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    troca separador decimal \PYZsq{}.\PYZsq{} para \PYZsq{},\PYZsq{}... é preciso ser assim em}
+        \PY{l+s+sd}{    alguns casos}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k}{return} \PY{n}{str\PYZus{}number}\PY{o}{.}\PY{n}{replace}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{,}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{@@}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{o}{.}\PY{n}{replace}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{.}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{,}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{o}{.}\PY{n}{replace}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{@@}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{.}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        
+        \PY{k}{def} \PY{n+nf}{as\PYZus{}si}\PY{p}{(}\PY{n}{x}\PY{p}{,} \PY{n}{ndp}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    coloca um número [x] em no}
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{n}{s} \PY{o}{=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZob{}}\PY{l+s+s1}{x:0.}\PY{l+s+si}{\PYZob{}ndp:d\PYZcb{}}\PY{l+s+s1}{e\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{x}\PY{o}{=}\PY{n}{x}\PY{p}{,} \PY{n}{ndp}\PY{o}{=}\PY{n}{ndp}\PY{p}{)}
+            \PY{n}{m}\PY{p}{,} \PY{n}{e} \PY{o}{=} \PY{n}{s}\PY{o}{.}\PY{n}{split}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{e}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+            \PY{k}{return} \PY{l+s+sa}{r}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+si}{\PYZob{}m:s\PYZcb{}}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{times 10\PYZca{}}\PY{l+s+s1}{\PYZob{}\PYZob{}}\PY{l+s+si}{\PYZob{}e:d\PYZcb{}}\PY{l+s+s1}{\PYZcb{}\PYZcb{}}\PY{l+s+s1}{\PYZsq{}}\PY{o}{.}\PY{n}{format}\PY{p}{(}\PY{n}{m}\PY{o}{=}\PY{n}{m}\PY{p}{,} \PY{n}{e}\PY{o}{=}\PY{n+nb}{int}\PY{p}{(}\PY{n}{e}\PY{p}{)}\PY{p}{)}
+\end{Verbatim}
+
+
+    \hypertarget{evoluuxe7uxe3o-analuxedtica}{%
+\section{Evolução analítica}\label{evoluuxe7uxe3o-analuxedtica}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}9}]:} \PY{k}{def} \PY{n+nf}{evolucao\PYZus{}analitica}\PY{p}{(}\PY{n}{zi}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{20.0}\PY{p}{,} \PY{n}{zf}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{E}\PY{o}{=}\PY{l+m+mf}{150.0}\PY{p}{,} \PY{n}{deltaz}\PY{o}{=}\PY{l+m+mf}{5.0}\PY{p}{,} \PY{n}{L}\PY{o}{=}\PY{l+m+mf}{250.0}\PY{p}{,} \PY{n}{N}\PY{o}{=}\PY{l+m+mi}{8192}\PY{p}{)}\PY{p}{:}
+            \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+        \PY{l+s+sd}{    Evolui uma onda com energia [E] e desvio padrão [deltaz] da posição }
+        \PY{l+s+sd}{    inicial [zi] até a posição final [zf]. A evolução ocorre em um espaço}
+        \PY{l+s+sd}{    unidimensional de lamanho [L] partido em [N] pontos. Esta evolução é}
+        \PY{l+s+sd}{    pseudo\PYZhy{}analítica, pois assume que a integração numérica pode ser realizada}
+        \PY{l+s+sd}{    com grande precisão.}
+        
+        \PY{l+s+sd}{    Parâmetros}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    zi : float}
+        \PY{l+s+sd}{        Posição inicial em Angstrom}
+        \PY{l+s+sd}{    zf : float }
+        \PY{l+s+sd}{        Posição final em Angstrom}
+        \PY{l+s+sd}{    E : float}
+        \PY{l+s+sd}{        Energia da onda em eV}
+        \PY{l+s+sd}{    deltaz : float}
+        \PY{l+s+sd}{        Desvio padrão em Angstrom}
+        \PY{l+s+sd}{    L : float}
+        \PY{l+s+sd}{        Compimento do sistema em Angstrom}
+        \PY{l+s+sd}{    N : integer}
+        \PY{l+s+sd}{        Número de pontos em que [L] será partido}
+        
+        \PY{l+s+sd}{    Retorna}
+        \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+        \PY{l+s+sd}{    resumo : dict}
+        \PY{l+s+sd}{        Um dicionário com as seguintes chaves:}
+        \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}si] malha de pontos em z (SI)}
+        \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}au] malha de pontos em z (AU)}
+        \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}ang] malha de pontos em z em Angstrom}
+        \PY{l+s+sd}{        \PYZhy{} [wave\PYZus{}initial\PYZus{}au] pacote de onda inicial (AU)}
+        \PY{l+s+sd}{        \PYZhy{} [wave\PYZus{}final\PYZus{}au] pacote de onda final (AU)}
+        \PY{l+s+sd}{        \PYZhy{} [a\PYZus{}initial] norma inicial \PYZlt{}psi|psi\PYZgt{}}
+        \PY{l+s+sd}{        \PYZhy{} [a\PYZus{}final] norma final \PYZlt{}psi|psi\PYZgt{}}
+        \PY{l+s+sd}{        \PYZhy{} [conservation] 100 * [a\PYZus{}final] / [a\PYZus{}initial]}
+        \PY{l+s+sd}{        \PYZhy{} [stdev] desvio padrao final em Angstrom}
+        \PY{l+s+sd}{        \PYZhy{} [skewness] obliquidade final}
+        \PY{l+s+sd}{        \PYZhy{} [time] o tempo físico para a onda ir de [zi] até [zf]}
+        \PY{l+s+sd}{        \PYZhy{} [zf\PYZus{}real] a posição final real que pode diferir um pouco de [zf]}
+        \PY{l+s+sd}{        \PYZhy{} também retorna os parâmetros, para facilitar salvar em um .csv}
+        
+        \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+            \PY{k}{assert} \PY{n}{zf} \PY{o}{\PYZgt{}} \PY{n}{zi}  \PY{c+c1}{\PYZsh{} a onda deve ir da esquerda para a direita}
+            \PY{k}{assert} \PY{n}{E} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}  \PY{c+c1}{\PYZsh{} energia nula, a onda fica no lugar}
+            \PY{k}{assert} \PY{n}{L} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}  \PY{c+c1}{\PYZsh{} o espaço não pode ser nulo}
+            \PY{k}{assert} \PY{n+nb}{int}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{log2}\PY{p}{(}\PY{n}{N}\PY{p}{)}\PY{p}{)} \PY{o}{==} \PY{n}{np}\PY{o}{.}\PY{n}{log2}\PY{p}{(}\PY{n}{N}\PY{p}{)}  \PY{c+c1}{\PYZsh{} N precisa ser potencia de 2}
+            \PY{k}{assert} \PY{o}{\PYZhy{}}\PY{n}{L}\PY{o}{/}\PY{l+m+mi}{4} \PY{o}{\PYZlt{}} \PY{n}{zf} \PY{o}{\PYZlt{}} \PY{n}{L}\PY{o}{/}\PY{l+m+mi}{4}  \PY{c+c1}{\PYZsh{} a posição final não pode estar próxima as bordas}
+            \PY{n}{result} \PY{o}{=} \PY{n+nb}{locals}\PY{p}{(}\PY{p}{)}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{p}{)}
+        
+            \PY{c+c1}{\PYZsh{} mudando para AU}
+            \PY{n}{L\PYZus{}au} \PY{o}{=} \PY{n}{L} \PY{o}{/} \PY{n}{au2ang}
+            \PY{n}{E\PYZus{}au} \PY{o}{=} \PY{n}{E} \PY{o}{/} \PY{n}{au2ev}
+            \PY{n}{deltaz\PYZus{}au} \PY{o}{=} \PY{n}{deltaz} \PY{o}{/} \PY{n}{au2ang}
+            \PY{n}{zi\PYZus{}au} \PY{o}{=} \PY{n}{zi} \PY{o}{/} \PY{n}{au2ang}
+            \PY{n}{zf\PYZus{}au} \PY{o}{=} \PY{n}{zf} \PY{o}{/} \PY{n}{au2ang}
+            \PY{n}{k0\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{E\PYZus{}au}\PY{p}{)}
+        
+            \PY{c+c1}{\PYZsh{} malha direta e recíproca}
+            \PY{n}{z\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{L\PYZus{}au}\PY{o}{/}\PY{l+m+mf}{2.0}\PY{p}{,} \PY{n}{L\PYZus{}au}\PY{o}{/}\PY{l+m+mf}{2.0}\PY{p}{,} \PY{n}{N}\PY{p}{)}
+            \PY{n}{dz\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{z\PYZus{}au}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{z\PYZus{}au}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+            \PY{n}{k\PYZus{}au} \PY{o}{=} \PY{n}{fftfreq}\PY{p}{(}\PY{n}{N}\PY{p}{,} \PY{n}{d}\PY{o}{=}\PY{n}{dz\PYZus{}au}\PY{p}{)}
+        
+            \PY{c+c1}{\PYZsh{} tempos}
+            \PY{n}{time\PYZus{}aux} \PY{o}{=} \PY{l+m+mf}{1e\PYZhy{}18}
+            \PY{n}{time} \PY{o}{=} \PY{l+m+mf}{5e\PYZhy{}18}
+        
+            \PY{c+c1}{\PYZsh{} valores iniciais}
+            \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{n}{zi\PYZus{}au}
+            \PY{n}{zm\PYZus{}au\PYZus{}aux} \PY{o}{=} \PY{n}{zi\PYZus{}au}
+        
+            \PY{c+c1}{\PYZsh{} pacote de onda inicial}
+            \PY{n}{PN} \PY{o}{=} \PY{l+m+mi}{1} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{pi} \PY{o}{*} \PY{n}{deltaz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{/} \PY{l+m+mi}{4}\PY{p}{)}
+            \PY{n}{psi} \PY{o}{=} \PY{n}{PN} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{l+m+mi}{1}\PY{n}{j}\PY{o}{*}\PY{n}{k0\PYZus{}au}\PY{o}{*}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{p}{(}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{n}{zi\PYZus{}au}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{o}{/}\PY{p}{(}\PY{l+m+mi}{4}\PY{o}{*}\PY{n}{deltaz\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+            \PY{n}{psi\PYZus{}initial} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{n}{psi}\PY{p}{)}  \PY{c+c1}{\PYZsh{} salva uma copia}
+        
+            \PY{c+c1}{\PYZsh{} valores iniciais}
+            \PY{n}{A} \PY{o}{=} \PY{n}{A0} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{simps}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{psi}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{p}{)}
+            \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{n}{zi\PYZus{}au}
+            \PY{n}{stdev\PYZus{}au} \PY{o}{=} \PY{n}{deltaz\PYZus{}au}
+            \PY{n}{skewness} \PY{o}{=} \PY{l+m+mf}{0.0}
+        
+            \PY{k}{while} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{zm\PYZus{}au} \PY{o}{\PYZhy{}} \PY{n}{zf\PYZus{}au}\PY{p}{)} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{l+m+mf}{0.00001}\PY{p}{:}
+                \PY{c+c1}{\PYZsh{} novo tempo}
+                \PY{n}{t\PYZus{}au} \PY{o}{=} \PY{p}{(}\PY{n}{time}\PY{p}{)} \PY{o}{/} \PY{n}{au\PYZus{}t}
+        
+                \PY{c+c1}{\PYZsh{} pacote de onda inicial}
+                \PY{n}{psi} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{n}{psi\PYZus{}initial}\PY{p}{)}
+        
+                \PY{c+c1}{\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}}
+                \PY{c+c1}{\PYZsh{} núcleo da solução pseudo\PYZhy{}analítica}
+                \PY{n}{psi\PYZus{}k} \PY{o}{=} \PY{n}{fft}\PY{p}{(}\PY{n}{psi}\PY{p}{)}
+                \PY{n}{omega\PYZus{}k} \PY{o}{=} \PY{n}{k\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2} \PY{o}{/} \PY{l+m+mi}{2}
+                \PY{n}{psi} \PY{o}{=} \PY{n}{ifft}\PY{p}{(}\PY{n}{psi\PYZus{}k} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{n}{j} \PY{o}{*} \PY{n}{omega\PYZus{}k} \PY{o}{*} \PY{n}{t\PYZus{}au}\PY{p}{)}\PY{p}{)}
+                \PY{c+c1}{\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}\PYZsh{}}
+        
+                \PY{c+c1}{\PYZsh{} main indicadores principais}
+                \PY{n}{A2} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{psi}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real}  \PY{c+c1}{\PYZsh{} quadrado da norma}
+                \PY{n}{A} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{A2}\PY{p}{)}  \PY{c+c1}{\PYZsh{} norma}
+                \PY{n}{psic} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{conjugate}\PY{p}{(}\PY{n}{psi}\PY{p}{)}
+                \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{p}{(}\PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}  \PY{c+c1}{\PYZsh{} \PYZlt{}psi|z|psi\PYZgt{}}
+        
+                \PY{c+c1}{\PYZsh{} ajuste do passo de tempo}
+                \PY{k}{if} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{zm\PYZus{}au} \PY{o}{\PYZhy{}} \PY{n}{zf\PYZus{}au}\PY{p}{)} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{l+m+mf}{0.00001}\PY{p}{:}
+                    \PY{k}{if} \PY{n}{zm\PYZus{}au\PYZus{}aux} \PY{o}{\PYZlt{}} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zm\PYZus{}au} \PY{o+ow}{or} \PY{n}{zm\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zm\PYZus{}au\PYZus{}aux}\PY{p}{:}
+                        \PY{n}{aux} \PY{o}{=} \PY{p}{(}\PY{n}{time\PYZus{}aux}\PY{o}{\PYZhy{}}\PY{n}{time}\PY{p}{)} \PY{o}{/} \PY{l+m+mi}{2}
+                    \PY{k}{elif} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zm\PYZus{}au} \PY{o+ow}{and} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zm\PYZus{}au\PYZus{}aux}\PY{p}{:}
+                        \PY{n}{aux} \PY{o}{=} \PY{o}{\PYZhy{}} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{time\PYZus{}aux}\PY{o}{\PYZhy{}}\PY{n}{time}\PY{p}{)}
+                    \PY{k}{elif} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZgt{}} \PY{n}{zm\PYZus{}au} \PY{o+ow}{and} \PY{n}{zf\PYZus{}au} \PY{o}{\PYZgt{}} \PY{n}{zm\PYZus{}au\PYZus{}aux}\PY{p}{:}
+                        \PY{n}{aux} \PY{o}{=} \PY{n+nb}{abs}\PY{p}{(}\PY{n}{time\PYZus{}aux}\PY{o}{\PYZhy{}}\PY{n}{time}\PY{p}{)}
+        
+                    \PY{n}{time\PYZus{}aux} \PY{o}{=} \PY{n}{time}
+                    \PY{n}{time} \PY{o}{+}\PY{o}{=} \PY{n}{aux}
+                    \PY{n}{zm\PYZus{}au\PYZus{}aux} \PY{o}{=} \PY{n}{zm\PYZus{}au}
+        
+                    \PY{k}{continue}
+        
+                \PY{c+c1}{\PYZsh{} indicadores secundários}
+                \PY{n}{zm2} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}
+                \PY{n}{zm3} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{3} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}
+                \PY{n}{stdev\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{zm2}\PY{o}{\PYZhy{}}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}  \PY{c+c1}{\PYZsh{} desvio padrão}
+                \PY{n}{skewness} \PY{o}{=} \PY{p}{(}\PY{n}{zm3}\PY{o}{\PYZhy{}}\PY{l+m+mi}{3}\PY{o}{*}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{n}{stdev\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{o}{\PYZhy{}}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{3}\PY{p}{)} \PY{o}{/} \PYZbs{}
+                    \PY{n}{stdev\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{3}  \PY{c+c1}{\PYZsh{} obliquidade}
+                    
+            \PY{n}{result}\PY{o}{.}\PY{n}{update}\PY{p}{(}\PY{p}{\PYZob{}}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}si}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{au2ang} \PY{o}{*} \PY{l+m+mf}{1e\PYZhy{}10}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}au}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{au2ang}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}initial}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{psi\PYZus{}initial}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}final}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{psi}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{a\PYZus{}initial}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{A0}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{a\PYZus{}final}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{A}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{conservation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+m+mi}{100} \PY{o}{*} \PY{n}{A} \PY{o}{/} \PY{n}{A0}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdev}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{stdev\PYZus{}au} \PY{o}{*} \PY{n}{au2ang}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewness}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{time}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zf\PYZus{}real}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{zm\PYZus{}au\PYZus{}aux} \PY{o}{*} \PY{n}{au2ang}
+            \PY{p}{\PYZcb{}}\PY{p}{)}
+        
+            \PY{k}{return} \PY{n}{result}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}10}]:} \PY{c+c1}{\PYZsh{} na verdade já são os valores padrão, colocamos aqui para usar na}
+         \PY{c+c1}{\PYZsh{} construção do gráfico a seguir}
+         \PY{n}{zi}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{20.0}
+         \PY{n}{zf}\PY{o}{=}\PY{l+m+mi}{20}
+         \PY{n}{E}\PY{o}{=}\PY{l+m+mf}{150.0}
+         \PY{n}{deltaz}\PY{o}{=}\PY{l+m+mf}{5.0}
+         \PY{n}{L}\PY{o}{=}\PY{l+m+mf}{150.0}
+         \PY{n}{N}\PY{o}{=}\PY{l+m+mi}{4096}
+         \PY{n}{res} \PY{o}{=} \PY{n}{evolucao\PYZus{}analitica}\PY{p}{(}\PY{n}{zi}\PY{o}{=}\PY{n}{zi}\PY{p}{,} \PY{n}{zf}\PY{o}{=}\PY{n}{zf}\PY{p}{,} \PY{n}{E}\PY{o}{=}\PY{n}{E}\PY{p}{,} \PY{n}{deltaz}\PY{o}{=}\PY{n}{deltaz}\PY{p}{,} \PY{n}{L}\PY{o}{=}\PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{o}{=}\PY{n}{N}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}11}]:} \PY{n}{dz} \PY{o}{=} \PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]}\PY{o}{\PYZhy{}}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}
+         \PY{n}{t\PYZus{}au} \PY{o}{=} \PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{/} \PY{n}{au\PYZus{}t}
+         \PY{n}{texto\PYZus{}z} \PY{o}{=} \PY{o}{\PYZhy{}}\PY{n}{L}\PY{o}{/}\PY{l+m+mi}{2}
+         
+         \PY{n}{fig} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{figure}\PY{p}{(}\PY{p}{)}
+         \PY{n}{ax} \PY{o}{=} \PY{n}{fig}\PY{o}{.}\PY{n}{add\PYZus{}subplot}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{set\PYZus{}ylim}\PY{p}{(}\PY{p}{[}\PY{o}{\PYZhy{}}\PY{l+m+mf}{0.005}\PY{p}{,} \PY{l+m+mf}{0.25}\PY{p}{]}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{l+m+mi}{14}\PY{p}{,} \PY{l+m+mf}{0.22}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathbf}\PY{l+s+s2}{\PYZob{}}\PY{l+s+s2}{L = }\PY{l+s+si}{\PYZpc{}.2f}\PY{l+s+s2}{\PYZcb{}\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{textbf}\PY{l+s+s2}{\PYZob{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA\PYZcb{}}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{L}\PY{p}{)}\PY{p}{)}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{red}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{fontsize}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.235}\PY{p}{,} \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{N = }\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{ pontos}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{n}{N}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.21}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}\PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{Delta z = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{dz}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.18}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}(t\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s2}{\PYZhy{}t\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s2}{) = }\PY{l+s+si}{\PYZpc{}s}\PY{l+s+s2}{\PYZdl{} s}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{as\PYZus{}si}\PY{p}{(}\PY{n}{t\PYZus{}au} \PY{o}{*} \PY{n}{au\PYZus{}t}\PY{p}{,} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.15}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{langle z\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s2}{ }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{rangle = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{zi}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.12}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{langle z\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s2}{ }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{rangle = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zf\PYZus{}real}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.09}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s2}{ = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{deltaz}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.06}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{sigma\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s2}{ = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdev}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.03}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s2}{ = }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{gamma\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s2}{ = }\PY{l+s+si}{\PYZpc{}.5f}\PY{l+s+s2}{\PYZdl{}}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{ax}\PY{o}{.}\PY{n}{text}\PY{p}{(}\PY{n}{texto\PYZus{}z}\PY{p}{,} \PY{l+m+mf}{0.005}\PY{p}{,} \PY{n}{dummy\PYZus{}comma}\PY{p}{(}
+             \PY{l+s+sa}{r}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{\PYZdl{}A\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s2}{/A\PYZus{}}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s2}{ = }\PY{l+s+si}{\PYZpc{}.2f}\PY{l+s+s2}{\PYZdl{} }\PY{l+s+s2}{\PYZbs{}}\PY{l+s+si}{\PYZpc{}\PYZpc{}}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{conservation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{gcf}\PY{p}{(}\PY{p}{)}\PY{o}{.}\PY{n}{subplots\PYZus{}adjust}\PY{p}{(}\PY{n}{bottom}\PY{o}{=}\PY{l+m+mf}{0.15}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{xlabel}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{z (}\PY{l+s+s2}{\PYZbs{}}\PY{l+s+s2}{AA)}\PY{l+s+s2}{\PYZdq{}}\PY{p}{,} \PY{n}{fontsize}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{ylabel}\PY{p}{(}\PY{l+s+sa}{r}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZdl{}|}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{Psi (z,t)|\PYZca{}2\PYZdl{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{fontsize}\PY{o}{=}\PY{l+m+mi}{24}\PY{p}{)}
+         \PY{n}{line1}\PY{p}{,} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}final}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{,}
+                           \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{31} \PY{o}{/} \PY{l+m+mi}{255}\PY{p}{,} \PY{l+m+mi}{119}\PY{o}{/}\PY{l+m+mi}{255}\PY{p}{,} \PY{l+m+mi}{180}\PY{o}{/}\PY{l+m+mi}{255}\PY{p}{)}\PY{p}{,}
+                           \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZdl{}|}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{Psi(z,t\PYZus{}}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{mathrm}\PY{l+s+si}{\PYZob{}f\PYZcb{}}\PY{l+s+s1}{)|\PYZca{}2\PYZdl{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{line2}\PY{p}{,} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}initial}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{)}\PY{p}{,} \PY{n}{lw}\PY{o}{=}\PY{l+m+mf}{2.0}\PY{p}{,}
+                           \PY{n}{color}\PY{o}{=}\PY{p}{(}\PY{l+m+mi}{174} \PY{o}{/} \PY{l+m+mi}{255}\PY{p}{,} \PY{l+m+mi}{199}\PY{o}{/}\PY{l+m+mi}{255}\PY{p}{,} \PY{l+m+mi}{232}\PY{o}{/}\PY{l+m+mi}{255}\PY{p}{)}\PY{p}{,}
+                           \PY{n}{label}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZdl{}|}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{Psi(z,t\PYZus{}}\PY{l+s+s1}{\PYZbs{}}\PY{l+s+s1}{mathrm}\PY{l+s+si}{\PYZob{}i\PYZcb{}}\PY{l+s+s1}{)|\PYZca{}2\PYZdl{}}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{legend}\PY{p}{(}\PY{n}{handles}\PY{o}{=}\PY{p}{[}\PY{n}{line1}\PY{p}{,} \PY{n}{line2}\PY{p}{]}\PY{p}{,} \PY{n}{loc}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+         \PY{n}{plt}\PY{o}{.}\PY{n}{savefig}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{evolucao\PYZus{}pseudo\PYZus{}analitica.png}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{center}
+    \adjustimage{max size={0.9\linewidth}{0.9\paperheight}}{output_14_0.png}
+    \end{center}
+    { \hspace*{\fill} \\}
+    
+    \hypertarget{evoluuxe7uxe3o-numuxe9rica}{%
+\section{Evolução numérica}\label{evoluuxe7uxe3o-numuxe9rica}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}12}]:} \PY{k}{def} \PY{n+nf}{evolucao\PYZus{}numerica}\PY{p}{(}\PY{n}{zi}\PY{o}{=}\PY{o}{\PYZhy{}}\PY{l+m+mf}{20.0}\PY{p}{,} \PY{n}{zf}\PY{o}{=}\PY{l+m+mi}{20}\PY{p}{,} \PY{n}{E}\PY{o}{=}\PY{l+m+mf}{150.0}\PY{p}{,} \PY{n}{deltaz}\PY{o}{=}\PY{l+m+mf}{5.0}\PY{p}{,} \PY{n}{L}\PY{o}{=}\PY{l+m+mf}{100.0}\PY{p}{,} \PY{n}{N}\PY{o}{=}\PY{l+m+mi}{256}\PY{p}{,}
+                               \PY{n}{dt}\PY{o}{=}\PY{l+m+mf}{1e\PYZhy{}20}\PY{p}{,} \PY{n}{method}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}\PY{p}{:}
+             \PY{l+s+sd}{\PYZdq{}\PYZdq{}\PYZdq{}}
+         \PY{l+s+sd}{    Evolui uma onda com energia [E] e desvio padrão [deltaz] da posição }
+         \PY{l+s+sd}{    inicial [zi] até a posição final [zf]. A evolução ocorre em um espaço}
+         \PY{l+s+sd}{    unidimensional de lamanho [L] partido em [N] pontos. }
+         \PY{l+s+sd}{    O método a ser utilizado deve ser escolhido entre Pseudo\PYZhy{}Espectral,}
+         \PY{l+s+sd}{    Crank\PYZhy{}Nicolson e Runge\PYZhy{}Kutta}
+         
+         \PY{l+s+sd}{    Parâmetros}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    zi : float}
+         \PY{l+s+sd}{        Posição inicial em Angstrom}
+         \PY{l+s+sd}{    zf : float }
+         \PY{l+s+sd}{        Posição final em Angstrom}
+         \PY{l+s+sd}{    E : float}
+         \PY{l+s+sd}{        Energia da onda em eV}
+         \PY{l+s+sd}{    deltaz : float}
+         \PY{l+s+sd}{        Desvio padrão em Angstrom}
+         \PY{l+s+sd}{    L : float}
+         \PY{l+s+sd}{        Compimento do sistema em Angstrom}
+         \PY{l+s+sd}{    N : integer}
+         \PY{l+s+sd}{        Número de pontos em que [L] será partido}
+         \PY{l+s+sd}{    dt : float}
+         \PY{l+s+sd}{        O passo de tempo em segundos}
+         \PY{l+s+sd}{    method : string}
+         \PY{l+s+sd}{        são aceitos:}
+         \PY{l+s+sd}{        \PYZhy{} \PYZsq{}pe\PYZsq{} : Pseudo\PYZhy{}Espectral}
+         \PY{l+s+sd}{        \PYZhy{} \PYZsq{}cn\PYZsq{} : Crank\PYZhy{}Nicolson}
+         \PY{l+s+sd}{        \PYZhy{} \PYZsq{}rk\PYZsq{} : Runge\PYZhy{}Kutta}
+         
+         \PY{l+s+sd}{    Retorna}
+         \PY{l+s+sd}{    \PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}\PYZhy{}}
+         \PY{l+s+sd}{    resumo : dict}
+         \PY{l+s+sd}{        Um dicionário com as seguintes chaves:}
+         \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}si] malha de pontos em z (SI)}
+         \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}au] malha de pontos em z (AU)}
+         \PY{l+s+sd}{        \PYZhy{} [z\PYZus{}ang] malha de pontos em z em Angstrom}
+         \PY{l+s+sd}{        \PYZhy{} [wave\PYZus{}initial\PYZus{}au] pacote de onda inicial (AU)}
+         \PY{l+s+sd}{        \PYZhy{} [wave\PYZus{}final\PYZus{}au] pacote de onda final (AU)}
+         \PY{l+s+sd}{        \PYZhy{} [a\PYZus{}initial] norma inicial \PYZlt{}psi|psi\PYZgt{}}
+         \PY{l+s+sd}{        \PYZhy{} [a\PYZus{}final] norma final \PYZlt{}psi|psi\PYZgt{}}
+         \PY{l+s+sd}{        \PYZhy{} [conservation] 100 * [a\PYZus{}final] / [a\PYZus{}initial]}
+         \PY{l+s+sd}{        \PYZhy{} [stdev] desvio padrao final em Angstrom}
+         \PY{l+s+sd}{        \PYZhy{} [skewness] obliquidade final}
+         \PY{l+s+sd}{        \PYZhy{} [zf\PYZus{}real] a posição final real que pode diferir um pouco de [zf]}
+         \PY{l+s+sd}{        \PYZhy{} [program\PYZus{}time] o tempo de processamento}
+         \PY{l+s+sd}{        \PYZhy{} [iterations] o número de iterações de tempo [dt]}
+         \PY{l+s+sd}{        \PYZhy{} também retorna os parâmetros, para facilitar salvar em um .csv}
+         
+         \PY{l+s+sd}{    \PYZdq{}\PYZdq{}\PYZdq{}}
+             \PY{k}{assert} \PY{n}{method} \PY{o+ow}{in} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cn}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}  \PY{c+c1}{\PYZsh{} metodos aceitos}
+             \PY{k}{assert} \PY{n}{zf} \PY{o}{\PYZgt{}} \PY{n}{zi}  \PY{c+c1}{\PYZsh{} a onda deve ir da esquerda para a direita}
+             \PY{k}{assert} \PY{n}{E} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}  \PY{c+c1}{\PYZsh{} energia nula, a onda fica no lugar}
+             \PY{k}{assert} \PY{n}{L} \PY{o}{\PYZgt{}} \PY{l+m+mi}{0}  \PY{c+c1}{\PYZsh{} o espaço não pode ser nulo}
+             \PY{k}{assert} \PY{n+nb}{int}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{log2}\PY{p}{(}\PY{n}{N}\PY{p}{)}\PY{p}{)} \PY{o}{==} \PY{n}{np}\PY{o}{.}\PY{n}{log2}\PY{p}{(}\PY{n}{N}\PY{p}{)}  \PY{c+c1}{\PYZsh{} N precisa ser potencia de 2}
+             \PY{k}{assert} \PY{o}{\PYZhy{}}\PY{n}{L}\PY{o}{/}\PY{l+m+mi}{4} \PY{o}{\PYZlt{}} \PY{n}{zf} \PY{o}{\PYZlt{}} \PY{n}{L}\PY{o}{/}\PY{l+m+mi}{4}  \PY{c+c1}{\PYZsh{} a posição final não pode estar próxima as bordas}
+             \PY{n}{result} \PY{o}{=} \PY{n+nb}{locals}\PY{p}{(}\PY{p}{)}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{p}{)}
+             
+             \PY{c+c1}{\PYZsh{} mudando para AU}
+             \PY{n}{L\PYZus{}au} \PY{o}{=} \PY{n}{L} \PY{o}{/} \PY{n}{au2ang}
+             \PY{n}{dt\PYZus{}au} \PY{o}{=} \PY{n}{dt} \PY{o}{/} \PY{n}{au\PYZus{}t}
+             \PY{n}{E\PYZus{}au} \PY{o}{=} \PY{n}{E} \PY{o}{/} \PY{n}{au2ev}
+             \PY{n}{deltaz\PYZus{}au} \PY{o}{=} \PY{n}{deltaz} \PY{o}{/} \PY{n}{au2ang}
+             \PY{n}{zi\PYZus{}au} \PY{o}{=} \PY{n}{zi} \PY{o}{/} \PY{n}{au2ang}
+             \PY{n}{zf\PYZus{}au} \PY{o}{=} \PY{n}{zf} \PY{o}{/} \PY{n}{au2ang}
+             \PY{n}{k0\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{E\PYZus{}au}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} malha direta e recíproca}
+             \PY{n}{z\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{linspace}\PY{p}{(}\PY{o}{\PYZhy{}}\PY{n}{L\PYZus{}au}\PY{o}{/}\PY{l+m+mf}{2.0}\PY{p}{,} \PY{n}{L\PYZus{}au}\PY{o}{/}\PY{l+m+mf}{2.0}\PY{p}{,} \PY{n}{N}\PY{p}{)}
+             \PY{n}{dz\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{z\PYZus{}au}\PY{p}{[}\PY{l+m+mi}{1}\PY{p}{]} \PY{o}{\PYZhy{}} \PY{n}{z\PYZus{}au}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+             \PY{n}{k\PYZus{}au} \PY{o}{=} \PY{n}{fftfreq}\PY{p}{(}\PY{n}{N}\PY{p}{,} \PY{n}{d}\PY{o}{=}\PY{n}{dz\PYZus{}au}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} começa a contar o tempo do programa}
+             \PY{n}{time\PYZus{}inicial} \PY{o}{=} \PY{n}{time}\PY{o}{.}\PY{n}{time}\PY{p}{(}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} o operador que leva Psi(x,t) a Psi(x,t+dt)}
+             \PY{k}{def} \PY{n+nf}{evolution\PYZus{}operator}\PY{p}{(}\PY{n}{p}\PY{p}{)}\PY{p}{:} \PY{k}{return} \PY{n}{p}
+         
+             \PY{c+c1}{\PYZsh{} runge\PYZhy{}kutta 4th order}
+             \PY{k}{if} \PY{n}{method} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}
+         \PY{c+c1}{\PYZsh{}         \PYZsh{} parâmetros instáveis}
+         \PY{c+c1}{\PYZsh{}         if dt\PYZus{}au / dz\PYZus{}au**2 \PYZgt{} 0.5:}
+         \PY{c+c1}{\PYZsh{}             raise Exception(\PYZdq{}Unstable parameters\PYZdq{})}
+                 \PY{n}{alpha} \PY{o}{=} \PY{l+m+mi}{1}\PY{n}{j} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{dz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}
+                 \PY{n}{beta} \PY{o}{=} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{n}{j} \PY{o}{/} \PY{p}{(}\PY{n}{dz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}
+                 \PY{n}{diagonal\PYZus{}1} \PY{o}{=} \PY{p}{[}\PY{n}{beta}\PY{p}{]} \PY{o}{*} \PY{n}{N}
+                 \PY{n}{diagonal\PYZus{}2} \PY{o}{=} \PY{p}{[}\PY{n}{alpha}\PY{p}{]} \PY{o}{*} \PY{p}{(}\PY{n}{N} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{)}
+                 \PY{n}{diagonals} \PY{o}{=} \PY{p}{[}\PY{n}{diagonal\PYZus{}1}\PY{p}{,} \PY{n}{diagonal\PYZus{}2}\PY{p}{,} \PY{n}{diagonal\PYZus{}2}\PY{p}{]}
+                 \PY{n}{D} \PY{o}{=} \PY{n}{diags}\PY{p}{(}\PY{n}{diagonals}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{o}{.}\PY{n}{toarray}\PY{p}{(}\PY{p}{)}
+         
+                 \PY{k}{def} \PY{n+nf}{evolution}\PY{p}{(}\PY{n}{p}\PY{p}{)}\PY{p}{:}
+                     \PY{n}{k1} \PY{o}{=} \PY{n}{D}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{p}\PY{p}{)}
+                     \PY{n}{k2} \PY{o}{=} \PY{n}{D}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{p} \PY{o}{+} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{n}{k1} \PY{o}{/} \PY{l+m+mi}{2}\PY{p}{)}
+                     \PY{n}{k3} \PY{o}{=} \PY{n}{D}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{p} \PY{o}{+} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{n}{k2} \PY{o}{/} \PY{l+m+mi}{2}\PY{p}{)}
+                     \PY{n}{k4} \PY{o}{=} \PY{n}{D}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{p} \PY{o}{+} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{n}{k3}\PY{p}{)}
+                     \PY{k}{return} \PY{n}{p} \PY{o}{+} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{p}{(}\PY{n}{k1} \PY{o}{+} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{k2} \PY{o}{+} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{k3} \PY{o}{+} \PY{n}{k4}\PY{p}{)} \PY{o}{/} \PY{l+m+mi}{6}
+         
+                 \PY{k}{def} \PY{n+nf}{evolution\PYZus{}operator}\PY{p}{(}\PY{n}{p}\PY{p}{)}\PY{p}{:} \PY{k}{return} \PY{n}{evolution}\PY{p}{(}\PY{n}{p}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} crank\PYZhy{}nicolson}
+             \PY{k}{if} \PY{n}{method} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cn}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}
+         \PY{c+c1}{\PYZsh{}         \PYZsh{} parâmetros instáveis}
+         \PY{c+c1}{\PYZsh{}         if dt\PYZus{}au / dz\PYZus{}au**2 \PYZgt{} 0.5:}
+         \PY{c+c1}{\PYZsh{}             raise Exception(\PYZdq{}Unstable parameters\PYZdq{})}
+                 \PY{n}{alpha} \PY{o}{=} \PY{o}{\PYZhy{}} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1}\PY{n}{j} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{dz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{o}{/}\PY{l+m+mf}{2.0}
+                 \PY{n}{beta} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{\PYZhy{}} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{p}{(}\PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{n}{j} \PY{o}{/} \PY{p}{(}\PY{n}{dz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{o}{/}\PY{l+m+mf}{2.0}
+                 \PY{n}{gamma} \PY{o}{=} \PY{l+m+mf}{1.0} \PY{o}{+} \PY{n}{dt\PYZus{}au} \PY{o}{*} \PY{p}{(}\PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{n}{j} \PY{o}{/} \PY{p}{(}\PY{n}{dz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}\PY{o}{/}\PY{l+m+mf}{2.0}
+         
+                 \PY{n}{diagonal\PYZus{}1} \PY{o}{=} \PY{p}{[}\PY{n}{beta}\PY{p}{]} \PY{o}{*} \PY{n}{N}
+                 \PY{n}{diagonal\PYZus{}2} \PY{o}{=} \PY{p}{[}\PY{n}{alpha}\PY{p}{]} \PY{o}{*} \PY{p}{(}\PY{n}{N} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{)}
+                 \PY{n}{diagonals} \PY{o}{=} \PY{p}{[}\PY{n}{diagonal\PYZus{}1}\PY{p}{,} \PY{n}{diagonal\PYZus{}2}\PY{p}{,} \PY{n}{diagonal\PYZus{}2}\PY{p}{]}
+                 \PY{n}{invB} \PY{o}{=} \PY{n}{inv}\PY{p}{(}\PY{n}{diags}\PY{p}{(}\PY{n}{diagonals}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{o}{.}\PY{n}{toarray}\PY{p}{(}\PY{p}{)}\PY{p}{)}
+         
+                 \PY{n}{diagonal\PYZus{}3} \PY{o}{=} \PY{p}{[}\PY{n}{gamma}\PY{p}{]} \PY{o}{*} \PY{n}{N}
+                 \PY{n}{diagonal\PYZus{}4} \PY{o}{=} \PY{p}{[}\PY{o}{\PYZhy{}}\PY{n}{alpha}\PY{p}{]} \PY{o}{*} \PY{p}{(}\PY{n}{N} \PY{o}{\PYZhy{}} \PY{l+m+mi}{1}\PY{p}{)}
+                 \PY{n}{diagonals\PYZus{}2} \PY{o}{=} \PY{p}{[}\PY{n}{diagonal\PYZus{}3}\PY{p}{,} \PY{n}{diagonal\PYZus{}4}\PY{p}{,} \PY{n}{diagonal\PYZus{}4}\PY{p}{]}
+                 \PY{n}{C} \PY{o}{=} \PY{n}{diags}\PY{p}{(}\PY{n}{diagonals\PYZus{}2}\PY{p}{,} \PY{p}{[}\PY{l+m+mi}{0}\PY{p}{,} \PY{o}{\PYZhy{}}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{1}\PY{p}{]}\PY{p}{)}\PY{o}{.}\PY{n}{toarray}\PY{p}{(}\PY{p}{)}
+         
+                 \PY{n}{D} \PY{o}{=} \PY{n}{invB}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{C}\PY{p}{)}
+         
+                 \PY{k}{def} \PY{n+nf}{evolution\PYZus{}operator}\PY{p}{(}\PY{n}{p}\PY{p}{)}\PY{p}{:} \PY{k}{return} \PY{n}{D}\PY{o}{.}\PY{n}{dot}\PY{p}{(}\PY{n}{p}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} split step}
+             \PY{k}{if} \PY{n}{method} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}
+                 \PY{n}{exp\PYZus{}v2} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{ones}\PY{p}{(}\PY{n}{N}\PY{p}{,} \PY{n}{dtype}\PY{o}{=}\PY{n}{np}\PY{o}{.}\PY{n}{complex\PYZus{}}\PY{p}{)}
+                 \PY{n}{exp\PYZus{}t} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{o}{\PYZhy{}} \PY{l+m+mf}{0.5}\PY{n}{j} \PY{o}{*} \PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{pi} \PY{o}{*} \PY{n}{k\PYZus{}au}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{dt\PYZus{}au}\PY{p}{)}
+         
+                 \PY{k}{def} \PY{n+nf}{evolution\PYZus{}operator}\PY{p}{(}\PY{n}{p}\PY{p}{)}\PY{p}{:} \PY{k}{return} \PYZbs{}
+                     \PY{n}{exp\PYZus{}v2} \PY{o}{*} \PY{n}{ifft}\PY{p}{(}\PY{n}{exp\PYZus{}t} \PY{o}{*} \PY{n}{fft}\PY{p}{(}\PY{n}{exp\PYZus{}v2} \PY{o}{*} \PY{n}{p}\PY{p}{)}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} pacote de onda inicial}
+             \PY{n}{PN} \PY{o}{=} \PY{l+m+mi}{1} \PY{o}{/} \PY{p}{(}\PY{l+m+mi}{2} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{pi} \PY{o}{*} \PY{n}{deltaz\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{p}{(}\PY{l+m+mi}{1} \PY{o}{/} \PY{l+m+mi}{4}\PY{p}{)}
+             \PY{n}{psi} \PY{o}{=} \PY{n}{PN} \PY{o}{*} \PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{l+m+mi}{1}\PY{n}{j}\PY{o}{*}\PY{n}{k0\PYZus{}au}\PY{o}{*}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{p}{(}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{n}{zi\PYZus{}au}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{o}{/}\PY{p}{(}\PY{l+m+mi}{4}\PY{o}{*}\PY{n}{deltaz\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+             \PY{n}{psi\PYZus{}initial} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{copy}\PY{p}{(}\PY{n}{psi}\PY{p}{)}  \PY{c+c1}{\PYZsh{} salva uma cópia}
+         
+             \PY{c+c1}{\PYZsh{} norma inicial \PYZlt{}psi|psi\PYZgt{}}
+             \PY{n}{A} \PY{o}{=} \PY{n}{A0} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{simps}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{psi}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{p}{)}
+         
+             \PY{c+c1}{\PYZsh{} valores iniciais}
+             \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{n}{zi\PYZus{}au}
+             \PY{n}{stdev\PYZus{}au} \PY{o}{=} \PY{n}{deltaz\PYZus{}au}
+             \PY{n}{skewness} \PY{o}{=} \PY{l+m+mf}{0.0}
+             \PY{n}{iterations} \PY{o}{=} \PY{l+m+mi}{0}
+         
+             \PY{k}{while} \PY{n}{zm\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zf\PYZus{}au}\PY{p}{:}
+                 \PY{n}{psi} \PY{o}{=} \PY{n}{evolution\PYZus{}operator}\PY{p}{(}\PY{n}{psi}\PY{p}{)}
+                 \PY{n}{iterations} \PY{o}{+}\PY{o}{=} \PY{l+m+mi}{1}
+         
+                 \PY{c+c1}{\PYZsh{} se a onda se mover para o lado oposto, já identifica logo}
+                 \PY{c+c1}{\PYZsh{} no início e inverte o sentido}
+                 \PY{k}{if} \PY{n}{zm\PYZus{}au} \PY{o}{\PYZlt{}} \PY{n}{zi\PYZus{}au}\PY{p}{:}
+                     \PY{n}{k0\PYZus{}au} \PY{o}{*}\PY{o}{=} \PY{o}{\PYZhy{}}\PY{l+m+mf}{1.0}
+                     \PY{n}{psi} \PY{o}{=} \PY{n}{PN}\PY{o}{*}\PY{n}{np}\PY{o}{.}\PY{n}{exp}\PY{p}{(}\PY{l+m+mi}{1}\PY{n}{j}\PY{o}{*}\PY{n}{k0\PYZus{}au}\PY{o}{*}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{p}{(}\PY{n}{z\PYZus{}au}\PY{o}{\PYZhy{}}\PY{n}{zi\PYZus{}au}\PY{p}{)}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{o}{/}\PY{p}{(}\PY{l+m+mi}{4}\PY{o}{*}\PY{n}{deltaz}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+                     \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{n}{zi\PYZus{}au}
+                     \PY{k}{continue}
+         
+                 \PY{c+c1}{\PYZsh{} indicadores principais}
+                 \PY{n}{A2} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{psi}\PY{p}{)} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real}
+                 \PY{n}{A} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{A2}\PY{p}{)}
+                 \PY{n}{psic} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{conjugate}\PY{p}{(}\PY{n}{psi}\PY{p}{)}
+         
+                 \PY{c+c1}{\PYZsh{} \PYZlt{}psi|z|psi\PYZgt{}}
+                 \PY{n}{zm\PYZus{}au} \PY{o}{=} \PY{p}{(}\PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}
+         
+                 \PY{c+c1}{\PYZsh{} para de medir o tempo (pode ser o fim)}
+                 \PY{n}{time\PYZus{}final} \PY{o}{=} \PY{n}{time}\PY{o}{.}\PY{n}{time}\PY{p}{(}\PY{p}{)}
+         
+                 \PY{c+c1}{\PYZsh{} se \PYZlt{}z\PYZgt{} \PYZgt{}= zf ou o tempo ultrapassou 1000 segundos}
+                 \PY{k}{if} \PY{n}{zm\PYZus{}au} \PY{o}{\PYZgt{}}\PY{o}{=} \PY{n}{zf\PYZus{}au} \PY{o+ow}{or} \PY{n}{time\PYZus{}final} \PY{o}{\PYZhy{}} \PY{n}{time\PYZus{}inicial} \PY{o}{\PYZgt{}} \PY{l+m+mi}{1000}\PY{p}{:}
+                     \PY{c+c1}{\PYZsh{} indicadores secundários}
+                     \PY{n}{zm2} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{2} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}
+                     \PY{n}{zm3} \PY{o}{=} \PY{n}{simps}\PY{p}{(}\PY{n}{psic} \PY{o}{*} \PY{n}{z\PYZus{}au} \PY{o}{*}\PY{o}{*} \PY{l+m+mi}{3} \PY{o}{*} \PY{n}{psi}\PY{p}{,} \PY{n}{z\PYZus{}au}\PY{p}{)}\PY{o}{.}\PY{n}{real} \PY{o}{/} \PY{n}{A2}
+                     \PY{n}{stdev\PYZus{}au} \PY{o}{=} \PY{n}{np}\PY{o}{.}\PY{n}{sqrt}\PY{p}{(}\PY{n}{np}\PY{o}{.}\PY{n}{abs}\PY{p}{(}\PY{n}{zm2}\PY{o}{\PYZhy{}}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{p}{)}\PY{p}{)}
+                     \PY{n}{skewness} \PY{o}{=} \PY{p}{(}\PY{n}{zm3}\PY{o}{\PYZhy{}}\PY{l+m+mi}{3}\PY{o}{*}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{n}{stdev\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{2}\PY{o}{\PYZhy{}}\PY{n}{zm\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{3}\PY{p}{)}\PY{o}{/}\PY{n}{stdev\PYZus{}au}\PY{o}{*}\PY{o}{*}\PY{l+m+mi}{3}
+         
+                     \PY{k}{if} \PY{n}{time\PYZus{}final} \PY{o}{\PYZhy{}} \PY{n}{time\PYZus{}inicial} \PY{o}{\PYZgt{}} \PY{l+m+mi}{1000}\PY{p}{:}
+                         \PY{k}{break}
+         
+             \PY{n}{result}\PY{o}{.}\PY{n}{update}\PY{p}{(}\PY{p}{\PYZob{}}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zi}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{zi}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zf}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{zf}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{E}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{E}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{deltaz}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{deltaz}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{L}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{L}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{N}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{N}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{dt}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{dt}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{method}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{method}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}si}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{au2ang} \PY{o}{*} \PY{l+m+mf}{1e\PYZhy{}10}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}au}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{z\PYZus{}ang}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{z\PYZus{}au} \PY{o}{*} \PY{n}{au2ang}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}initial}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{psi\PYZus{}initial}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{wave\PYZus{}final}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{psi}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{a\PYZus{}initial}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{A0}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{a\PYZus{}final}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{A}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{conservation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{l+m+mi}{100} \PY{o}{*} \PY{n}{A} \PY{o}{/} \PY{n}{A0}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdev}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{stdev\PYZus{}au} \PY{o}{*} \PY{n}{au2ang}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{skewness}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zf\PYZus{}real}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{zm\PYZus{}au} \PY{o}{*} \PY{n}{au2ang}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{time\PYZus{}final} \PY{o}{\PYZhy{}} \PY{n}{time\PYZus{}inicial}\PY{p}{,}
+                 \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{iterations}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:} \PY{n}{iterations}
+             \PY{p}{\PYZcb{}}\PY{p}{)}
+             \PY{k}{return} \PY{n}{result}
+\end{Verbatim}
+
+
+    \hypertarget{avaliauxe7uxe3o-das-evoluuxe7uxf5es-numuxe9ricas}{%
+\subsection{Avaliação das evoluções
+numéricas}\label{avaliauxe7uxe3o-das-evoluuxe7uxf5es-numuxe9ricas}}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor}11}]:} \PY{n}{methods} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cn}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}  \PY{c+c1}{\PYZsh{} 3x}
+         \PY{n}{steps} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{1e\PYZhy{}19}\PY{p}{,} \PY{l+m+mf}{5e\PYZhy{}19}\PY{p}{,} \PY{l+m+mf}{1e\PYZhy{}18}\PY{p}{,} \PY{l+m+mf}{5e\PYZhy{}18}\PY{p}{,} \PY{l+m+mf}{1e\PYZhy{}17}\PY{p}{,} \PY{l+m+mf}{5e\PYZhy{}17}\PY{p}{]}  \PY{c+c1}{\PYZsh{} 6x}
+         \PY{n}{spaces} \PY{o}{=} \PY{p}{[}\PY{l+m+mf}{500.0}\PY{p}{,} \PY{l+m+mf}{750.0}\PY{p}{,} \PY{l+m+mf}{1000.0}\PY{p}{]}  \PY{c+c1}{\PYZsh{} 3x}
+         \PY{n}{grid\PYZus{}sizes} \PY{o}{=} \PY{p}{[}\PY{l+m+mi}{512}\PY{p}{,} \PY{l+m+mi}{1024}\PY{p}{,} \PY{l+m+mi}{2048}\PY{p}{]}  \PY{c+c1}{\PYZsh{} 3x}
+         
+         \PY{n}{combinations} \PY{o}{=} \PY{p}{[}\PY{p}{]}
+         \PY{k}{for} \PY{n}{method} \PY{o+ow}{in} \PY{n}{methods}\PY{p}{:}
+             \PY{k}{for} \PY{n}{L} \PY{o+ow}{in} \PY{n}{spaces}\PY{p}{:}
+                 \PY{k}{for} \PY{n}{N} \PY{o+ow}{in} \PY{n}{grid\PYZus{}sizes}\PY{p}{:}
+                     \PY{k}{for} \PY{n}{dt} \PY{o+ow}{in} \PY{n}{steps}\PY{p}{:}
+                         \PY{k}{if} \PY{n}{dt} \PY{o}{\PYZlt{}} \PY{l+m+mf}{1e\PYZhy{}19} \PY{o+ow}{and} \PY{n}{method} \PY{o}{!=} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{:}
+                             \PY{k}{continue}
+                         \PY{n}{combinations}\PY{o}{.}\PY{n}{append}\PY{p}{(}\PY{p}{(}\PY{n}{method}\PY{p}{,} \PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{p}{,} \PY{n}{dt}\PY{p}{)}\PY{p}{)}
+         
+         \PY{k}{def} \PY{n+nf}{evolui\PYZus{}combinacao}\PY{p}{(}\PY{n}{combination}\PY{p}{)}\PY{p}{:}
+             \PY{k}{try}\PY{p}{:}
+                 \PY{n}{method}\PY{p}{,} \PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{p}{,} \PY{n}{dt} \PY{o}{=} \PY{n}{combination}
+                 \PY{n}{res} \PY{o}{=} \PY{n}{evolucao\PYZus{}numerica}\PY{p}{(}\PY{n}{L}\PY{o}{=}\PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{o}{=}\PY{n}{N}\PY{p}{,} \PY{n}{dt}\PY{o}{=}\PY{n}{dt}\PY{p}{,} \PY{n}{method}\PY{o}{=}\PY{n}{method}\PY{p}{)}
+                 \PY{n}{zf\PYZus{}real} \PY{o}{=} \PY{n}{res}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{zf\PYZus{}real}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+                 \PY{n}{res\PYZus{}ana} \PY{o}{=} \PY{n}{evolucao\PYZus{}analitica}\PY{p}{(}\PY{n}{zf}\PY{o}{=}\PY{n}{zf\PYZus{}real}\PY{p}{,} \PY{n}{L}\PY{o}{=}\PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{o}{=}\PY{n}{N}\PY{p}{)}
+                 \PY{k}{for} \PY{n}{k} \PY{o+ow}{in} \PY{n}{res\PYZus{}ana}\PY{o}{.}\PY{n}{keys}\PY{p}{(}\PY{p}{)}\PY{p}{:}
+                     \PY{n}{res}\PY{p}{[}\PY{n}{k} \PY{o}{+} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{\PYZus{}ana}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{res\PYZus{}ana}\PY{p}{[}\PY{n}{k}\PY{p}{]}
+         \PY{c+c1}{\PYZsh{}         message = \PYZdq{}\PYZpc{}s: L=\PYZpc{}d, N=\PYZpc{}d, dt=\PYZpc{}.2e, \PYZdq{} + \PYZbs{}}
+         \PY{c+c1}{\PYZsh{}                     \PYZdq{}A/A0=\PYZpc{}.5f, S=\PYZpc{}.4f, G=\PYZpc{}.4f, \PYZdq{} + \PYZbs{}}
+         \PY{c+c1}{\PYZsh{}                     \PYZdq{}A/A0\PYZus{}ana=\PYZpc{}.5f, S\PYZus{}ana=\PYZpc{}.4f, G\PYZus{}ana=\PYZpc{}.4f, \PYZdq{} + \PYZbs{}}
+         \PY{c+c1}{\PYZsh{}                     \PYZdq{}time=\PYZpc{}.5f\PYZdq{}}
+         \PY{c+c1}{\PYZsh{}         message = message \PYZpc{} (method, L, N, dt,\PYZbs{}}
+         \PY{c+c1}{\PYZsh{}             res[\PYZsq{}conservation\PYZsq{}], res[\PYZsq{}stdev\PYZsq{}], \PYZbs{}}
+         \PY{c+c1}{\PYZsh{}             res[\PYZsq{}skewness\PYZsq{}], res[\PYZsq{}conservation\PYZus{}ana\PYZsq{}], \PYZbs{}}
+         \PY{c+c1}{\PYZsh{}             res[\PYZsq{}stdev\PYZus{}ana\PYZsq{}], res[\PYZsq{}skewness\PYZus{}ana\PYZsq{}],}
+         \PY{c+c1}{\PYZsh{}             res[\PYZsq{}program\PYZus{}time\PYZsq{}])}
+                 
+         \PY{c+c1}{\PYZsh{}         print(message)}
+                 \PY{k}{return} \PY{n}{res}
+             \PY{k}{except} \PY{n+ne}{Exception} \PY{k}{as} \PY{n}{err}\PY{p}{:}
+                 \PY{n+nb}{print}\PY{p}{(}\PY{n}{err}\PY{p}{)}
+                 \PY{n+nb}{print}\PY{p}{(}\PY{l+s+s2}{\PYZdq{}}\PY{l+s+s2}{Falha em }\PY{l+s+si}{\PYZpc{}s}\PY{l+s+s2}{: L=}\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{, N=}\PY{l+s+si}{\PYZpc{}d}\PY{l+s+s2}{, dt=}\PY{l+s+si}{\PYZpc{}.2e}\PY{l+s+s2}{\PYZdq{}} \PY{o}{\PYZpc{}} \PY{p}{(}\PY{n}{method}\PY{p}{,} \PY{n}{L}\PY{p}{,} \PY{n}{N}\PY{p}{,} \PY{n}{dt}\PY{p}{)}\PY{p}{)}
+                 \PY{k}{return} \PY{p}{\PYZob{}}\PY{p}{\PYZcb{}}
+         
+         \PY{c+c1}{\PYZsh{} pool = Pool(processes=2)}
+         \PY{c+c1}{\PYZsh{} results = pd.DataFrame(pool.map(evolui\PYZus{}combinacao, combinations))}
+         \PY{n}{results} \PY{o}{=} \PY{n}{pd}\PY{o}{.}\PY{n}{DataFrame}\PY{p}{(}\PY{n+nb}{list}\PY{p}{(}\PY{n+nb}{map}\PY{p}{(}\PY{n}{evolui\PYZus{}combinacao}\PY{p}{,} \PY{n}{combinations}\PY{p}{)}\PY{p}{)}\PY{p}{)}
+         
+         \PY{n}{pec} \PY{o}{=} \PY{n}{results}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{n}{results}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{method}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{pe}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+         \PY{n}{cnc} \PY{o}{=} \PY{n}{results}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{n}{results}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{method}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{cn}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+         \PY{n}{rkc} \PY{o}{=} \PY{n}{results}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{n}{results}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{method}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{==} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{rk}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+         \PY{n}{pec}\PY{o}{.}\PY{n}{to\PYZus{}csv}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{onda\PYZus{}plana\PYZus{}resultados\PYZus{}pec.csv}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{cnc}\PY{o}{.}\PY{n}{to\PYZus{}csv}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{onda\PYZus{}plana\PYZus{}resultados\PYZus{}cnc.csv}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+         \PY{n}{rkc}\PY{o}{.}\PY{n}{to\PYZus{}csv}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{onda\PYZus{}plana\PYZus{}resultados\PYZus{}rkc.csv}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+cn: L=100, N=256, dt=1.00e-18, A/A0=100.00000, S=5.3638, G=0.0054, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=1.17273
+cn: L=100, N=256, dt=5.00e-18, A/A0=100.00000, S=5.4032, G=0.0036, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=0.30093
+cn: L=100, N=512, dt=1.00e-18, A/A0=100.00000, S=5.0066, G=0.0032, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=0.83575
+cn: L=100, N=512, dt=5.00e-18, A/A0=100.00000, S=5.0028, G=0.0054, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=0.28597
+cn: L=100, N=1024, dt=1.00e-18, A/A0=100.00000, S=5.0276, G=0.0011, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=2.18755
+cn: L=100, N=1024, dt=5.00e-18, A/A0=100.00000, S=5.0001, G=0.0058, A/A0\_ana=100.00000, S\_ana=5.0409, G\_ana=-0.0000, time=0.79417
+cn: L=200, N=256, dt=1.00e-18, A/A0=72.74457, S=2.9940, G=0.0528, A/A0\_ana=97.78073, S\_ana=92.4086, G\_ana=-0.4450, time=1.41587
+cn: L=200, N=256, dt=5.00e-18, A/A0=72.74457, S=2.9868, G=0.0578, A/A0\_ana=97.78074, S\_ana=92.4084, G\_ana=-0.4451, time=0.39083
+cn: L=200, N=512, dt=1.00e-18, A/A0=100.00000, S=5.3556, G=0.0055, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=0.0000, time=2.47249
+cn: L=200, N=512, dt=5.00e-18, A/A0=100.00000, S=5.3959, G=0.0037, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=0.72463
+cn: L=200, N=1024, dt=1.00e-18, A/A0=100.00000, S=5.0067, G=0.0032, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=0.0000, time=5.80891
+cn: L=200, N=1024, dt=5.00e-18, A/A0=100.00000, S=5.0028, G=0.0054, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=0.99480
+cn: L=300, N=256, dt=1.00e-18, A/A0=100.00000, S=5.5613, G=0.0245, A/A0\_ana=100.00000, S\_ana=6.5838, G\_ana=-0.0000, time=2.22355
+cn: L=300, N=256, dt=5.00e-18, A/A0=100.00000, S=5.5613, G=0.0246, A/A0\_ana=100.00000, S\_ana=6.5859, G\_ana=-0.0000, time=0.51015
+cn: L=300, N=512, dt=1.00e-18, A/A0=72.74457, S=7.8392, G=-0.1573, A/A0\_ana=97.99319, S\_ana=144.0605, G\_ana=-0.2822, time=4.01812
+cn: L=300, N=512, dt=5.00e-18, A/A0=72.74457, S=7.8966, G=-0.1476, A/A0\_ana=97.99332, S\_ana=144.0545, G\_ana=-0.2828, time=0.96853
+cn: L=300, N=1024, dt=1.00e-18, A/A0=100.00000, S=5.0114, G=0.0067, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=0.0000, time=3.23647
+cn: L=300, N=1024, dt=5.00e-18, A/A0=100.00000, S=5.0358, G=0.0057, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=1.16019
+rk: L=100, N=256, dt=1.00e-18, A/A0=99.99144, S=5.3619, G=0.0055, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=1.15935
+rk: L=100, N=256, dt=5.00e-18, A/A0=77.56706, S=5.3661, G=0.0056, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=0.29907
+rk: L=100, N=512, dt=1.00e-18, A/A0=99.96718, S=5.0079, G=0.0030, A/A0\_ana=100.00000, S\_ana=5.0406, G\_ana=-0.0000, time=1.36507
+rk: L=100, N=512, dt=5.00e-18, A/A0=68.20991, S=2.6589, G=0.0015, A/A0\_ana=100.00000, S\_ana=5.0002, G\_ana=0.0000, time=1000.00186
+rk: L=100, N=1024, dt=1.00e-18, A/A0=99.95229, S=5.0308, G=0.0007, A/A0\_ana=100.00000, S\_ana=5.0405, G\_ana=-0.0000, time=7.28512
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+
+        ---------------------------------------------------------------------------
+
+        KeyboardInterrupt                         Traceback (most recent call last)
+
+        <ipython-input-11-196fa2f8d6a3> in <module>()
+         40 \# pool = Pool(processes=2)
+         41 \# results = pd.DataFrame(pool.map(evolui\_combinacao, combinations))
+    ---> 42 results = pd.DataFrame(list(map(evolui\_combinacao, combinations)))
+         43 
+         44 pec = results.loc[results['method'] == 'pe']
+
+
+        <ipython-input-11-196fa2f8d6a3> in evolui\_combinacao(combination)
+         20     try:
+         21         method, L, N, dt = combination
+    ---> 22         res = evolucao\_numerica(L=L, N=N, dt=dt, method=method)
+         23         zf\_real = res['zf\_real']
+         24         res\_ana = evolucao\_analitica(zf=zf\_real, L=L, N=N)
+
+
+        <ipython-input-10-66439ff14120> in evolucao\_numerica(zi, zf, E, deltaz, L, N, dt, method)
+        142 
+        143     while zm\_au < zf\_au:
+    --> 144         psi = evolution\_operator(psi)
+        145         iterations += 1
+        146 
+
+
+        <ipython-input-10-66439ff14120> in evolution\_operator(p)
+         95             return p + dt\_au * (k1 + 2 * k2 + 2 * k3 + k4) / 6
+         96 
+    ---> 97         def evolution\_operator(p): return evolution(p)
+         98 
+         99     \# crank-nicolson
+
+
+        <ipython-input-10-66439ff14120> in evolution(p)
+         89 
+         90         def evolution(p):
+    ---> 91             k1 = D.dot(p)
+         92             k2 = D.dot(p + dt\_au * k1 / 2)
+         93             k3 = D.dot(p + dt\_au * k2 / 2)
+
+
+        KeyboardInterrupt: 
+
+    \end{Verbatim}
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} \PY{c+c1}{\PYZsh{} scale results for quality indicator}
+        \PY{n}{scaler} \PY{o}{=} \PY{n}{StandardScaler}\PY{p}{(}\PY{p}{)}
+        \PY{n}{cols} \PY{o}{=} \PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdev}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skewness}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{conservation}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdev\PYZus{}ana}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skewness\PYZus{}ana}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{conservation\PYZus{}ana}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}
+        \PY{n}{pec}\PY{p}{[}\PY{n}{cols}\PY{p}{]} \PY{o}{=} \PY{n}{scaler}\PY{o}{.}\PY{n}{fit\PYZus{}transform}\PY{p}{(}\PY{n}{pec}\PY{p}{[}\PY{n}{cols}\PY{p}{]}\PY{p}{)}
+        \PY{n}{rkc}\PY{p}{[}\PY{n}{cols}\PY{p}{]} \PY{o}{=} \PY{n}{scaler}\PY{o}{.}\PY{n}{fit\PYZus{}transform}\PY{p}{(}\PY{n}{rkc}\PY{p}{[}\PY{n}{cols}\PY{p}{]}\PY{p}{)}
+        \PY{n}{cnc}\PY{p}{[}\PY{n}{cols}\PY{p}{]} \PY{o}{=} \PY{n}{scaler}\PY{o}{.}\PY{n}{fit\PYZus{}transform}\PY{p}{(}\PY{n}{cnc}\PY{p}{[}\PY{n}{cols}\PY{p}{]}\PY{p}{)}
+        
+        \PY{n}{p} \PY{o}{=} \PY{l+m+mi}{3}
+        \PY{n}{fig}\PY{p}{,} \PY{p}{(}\PY{n}{ax1}\PY{p}{,} \PY{n}{ax2}\PY{p}{,} \PY{n}{ax3}\PY{p}{)} \PY{o}{=} \PY{n}{plt}\PY{o}{.}\PY{n}{subplots}\PY{p}{(}\PY{l+m+mi}{1}\PY{p}{,} \PY{l+m+mi}{3}\PY{p}{,} \PY{n}{sharex}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        
+        \PY{k}{with} \PY{n}{pd}\PY{o}{.}\PY{n}{plotting}\PY{o}{.}\PY{n}{plot\PYZus{}params}\PY{o}{.}\PY{n}{use}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{x\PYZus{}compat}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{k+kc}{True}\PY{p}{)}\PY{p}{:}
+            \PY{n}{pec}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{pec}\PY{o}{.}\PY{n}{apply}\PY{p}{(}\PY{k}{lambda} \PY{n}{l}\PY{p}{:} \PY{n}{cdist}\PY{p}{(}\PY{n}{XA}\PY{o}{=}\PY{p}{[}\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdvar}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skew}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{XB}\PY{o}{=}\PY{p}{[}
+                                         \PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{stdvar\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{skew\PYZus{}real}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{metric}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{p}\PY{o}{=}\PY{n}{p}\PY{p}{)}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{n}{pec}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{y}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{kind}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{scatter}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                     \PY{n}{loglog}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{r}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax1}\PY{p}{,} \PY{n}{sharex}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        
+            \PY{n}{rkc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{rkc}\PY{o}{.}\PY{n}{apply}\PY{p}{(}\PY{k}{lambda} \PY{n}{l}\PY{p}{:} \PY{n}{cdist}\PY{p}{(}\PY{n}{XA}\PY{o}{=}\PY{p}{[}\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdvar}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skew}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{XB}\PY{o}{=}\PY{p}{[}
+                                         \PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{stdvar\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{skew\PYZus{}real}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{metric}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{p}\PY{o}{=}\PY{n}{p}\PY{p}{)}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{n}{rkc}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{y}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{kind}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{scatter}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                     \PY{n}{loglog}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{g}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax2}\PY{p}{,} \PY{n}{sharex}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        
+            \PY{n}{cnc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{=} \PY{n}{cnc}\PY{o}{.}\PY{n}{apply}\PY{p}{(}\PY{k}{lambda} \PY{n}{l}\PY{p}{:} \PY{n}{cdist}\PY{p}{(}\PY{n}{XA}\PY{o}{=}\PY{p}{[}\PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{stdvar}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{,} \PY{n}{l}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{skew}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{XB}\PY{o}{=}\PY{p}{[}
+                                         \PY{p}{[}\PY{n}{l}\PY{o}{.}\PY{n}{a\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{stdvar\PYZus{}real}\PY{p}{,} \PY{n}{l}\PY{o}{.}\PY{n}{skew\PYZus{}real}\PY{p}{]}\PY{p}{]}\PY{p}{,} \PY{n}{metric}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{p}\PY{o}{=}\PY{n}{p}\PY{p}{)}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{,} \PY{n}{axis}\PY{o}{=}\PY{l+m+mi}{1}\PY{p}{)}
+            \PY{n}{cnc}\PY{o}{.}\PY{n}{plot}\PY{p}{(}\PY{n}{x}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{y}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{kind}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{scatter}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,}
+                     \PY{n}{loglog}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{color}\PY{o}{=}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{b}\PY{l+s+s1}{\PYZsq{}}\PY{p}{,} \PY{n}{ax}\PY{o}{=}\PY{n}{ax3}\PY{p}{,} \PY{n}{sharex}\PY{o}{=}\PY{k+kc}{True}\PY{p}{,} \PY{n}{sharey}\PY{o}{=}\PY{k+kc}{True}\PY{p}{)}
+        
+        \PY{n}{ax1}\PY{o}{.}\PY{n}{title}\PY{o}{.}\PY{n}{set\PYZus{}text}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Pseudo\PYZhy{}Espectral}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax2}\PY{o}{.}\PY{n}{title}\PY{o}{.}\PY{n}{set\PYZus{}text}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Runge\PYZhy{}Kutta}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax3}\PY{o}{.}\PY{n}{title}\PY{o}{.}\PY{n}{set\PYZus{}text}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Crank\PYZhy{}Nicolson}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}ylabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Distancia de Minkowski (p=3)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}ylabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Distancia de Minkowski (p=3)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax3}\PY{o}{.}\PY{n}{set\PYZus{}ylabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Distancia de Minkowski (p=3)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax1}\PY{o}{.}\PY{n}{set\PYZus{}xlabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Tempo total (s)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax2}\PY{o}{.}\PY{n}{set\PYZus{}xlabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Tempo total (s)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        \PY{n}{ax3}\PY{o}{.}\PY{n}{set\PYZus{}xlabel}\PY{p}{(}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{Tempo total (s)}\PY{l+s+s1}{\PYZsq{}}\PY{p}{)}
+        
+        \PY{n+nb}{print}\PY{p}{(}\PY{n}{cnc}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{p}{(}\PY{n}{cnc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mf}{0.1}\PY{p}{)} \PY{o}{\PYZam{}} \PY{p}{(}
+            \PY{n}{cnc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{]}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{/}\PY{n}{cnc}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+        \PY{n+nb}{print}\PY{p}{(}\PY{n}{rkc}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{p}{(}\PY{n}{rkc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mf}{0.1}\PY{p}{)} \PY{o}{\PYZam{}} \PY{p}{(}
+            \PY{n}{rkc}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{]}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{/}\PY{n}{rkc}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+        \PY{n+nb}{print}\PY{p}{(}\PY{n}{pec}\PY{o}{.}\PY{n}{loc}\PY{p}{[}\PY{p}{(}\PY{n}{pec}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{program\PYZus{}time}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mf}{0.1}\PY{p}{)} \PY{o}{\PYZam{}} \PY{p}{(}
+            \PY{n}{pec}\PY{p}{[}\PY{l+s+s1}{\PYZsq{}}\PY{l+s+s1}{minkowski}\PY{l+s+s1}{\PYZsq{}}\PY{p}{]} \PY{o}{\PYZlt{}} \PY{l+m+mi}{1}\PY{p}{)}\PY{p}{]}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{o}{/}\PY{n}{pec}\PY{o}{.}\PY{n}{shape}\PY{p}{[}\PY{l+m+mi}{0}\PY{p}{]}\PY{p}{)}
+\end{Verbatim}
+
+
+    \begin{Verbatim}[commandchars=\\\{\}]
+{\color{incolor}In [{\color{incolor} }]:} 
+\end{Verbatim}
+
+
 
     % Add a bibliography block to the postdoc
     
