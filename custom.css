@@ -30,3 +30,8 @@ background: whitesmoke;
 .MathJax_Display {
     text-align: center !important;
 }
+img {
+display: block;
+margin-left: auto;
+margin-right: auto;
+}
