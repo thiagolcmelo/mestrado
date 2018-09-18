@@ -120,6 +120,7 @@ def autovalor(z: list, V: list, psi: list, m: list) -> float:
     -------
     O autovalor E=<Psi|H|Psi>/<Psi|Psi>
     """
+    N = len(z)
     dz = np.append(z[1:]-z[:-1], z[1]-z[0])
     dz2 = dz**2
     h_psi = np.zeros(N, dtype=np.complex_)

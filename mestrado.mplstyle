@@ -38,7 +38,7 @@ legend.handlelength  : 3
 legend.handletextpad : .1
 
 figure.titlesize : 22
-figure.figsize   : 11.69, 8.27
+figure.figsize   : 10.0, 6.0
 figure.dpi       : 300
 
 savefig.bbox : tight
