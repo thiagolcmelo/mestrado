@@ -11776,7 +11776,6 @@ ul.typeahead-list > li > a {
 /* Overrides of notebook CSS for static HTML export */
 .reveal {
   font-size: 160%;
-  overflow-y: scroll;
 }
 .reveal pre {
   width: inherit;
@@ -11806,6 +11805,41 @@ ul.typeahead-list > li > a {
 }
 .reveal .progress {
   position: static;
+}
+.reveal .controls .navigate-left,
+.reveal .controls .navigate-left.enabled {
+  border-right-color: #727272;
+}
+.reveal .controls .navigate-left.enabled:hover,
+.reveal .controls .navigate-left.enabled.enabled:hover {
+  border-right-color: #dfdfdf;
+}
+.reveal .controls .navigate-right,
+.reveal .controls .navigate-right.enabled {
+  border-left-color: #727272;
+}
+.reveal .controls .navigate-right.enabled:hover,
+.reveal .controls .navigate-right.enabled.enabled:hover {
+  border-left-color: #dfdfdf;
+}
+.reveal .controls .navigate-up,
+.reveal .controls .navigate-up.enabled {
+  border-bottom-color: #727272;
+}
+.reveal .controls .navigate-up.enabled:hover,
+.reveal .controls .navigate-up.enabled.enabled:hover {
+  border-bottom-color: #dfdfdf;
+}
+.reveal .controls .navigate-down,
+.reveal .controls .navigate-down.enabled {
+  border-top-color: #727272;
+}
+.reveal .controls .navigate-down.enabled:hover,
+.reveal .controls .navigate-down.enabled.enabled:hover {
+  border-top-color: #dfdfdf;
+}
+.reveal .progress span {
+  background: #727272;
 }
 div.input_area {
   padding: 0.06em;
@@ -11839,6 +11873,19 @@ a.anchor-link {
 }
 .rendered_html p {
   text-align: inherit;
+}
+::-webkit-scrollbar
+{
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar *
+{
+  background:transparent;
+}
+::-webkit-scrollbar-thumb
+{
+  background: #727272 !important;
 }
 </style>
 
@@ -11891,7 +11938,7 @@ a.anchor-link {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Em nossos primeiros cálculos, pequenas variações:</p>
 <ul>
 <li>tamanho do sistema $L$ ...................... efeitos de borda</li>
@@ -11907,10 +11954,12 @@ a.anchor-link {
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>É um problema simples de EDP:</p>
-$$-\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2} = i \hbar \frac{\partial \psi(z,t)}{\partial t},$$<p>para:</p>
-$$\psi(z,0) = \frac{1}{ \sqrt[4]{ 2 \pi \sigma_{z}^2 }} \exp \left( i k_\mathrm{0} z - \frac{{\left( z - z_\mathrm{0} \right)}^2}{4 \sigma_{z}^2} \right).$$<p>Este problema possui <em>algumas</em> soluções analíticas, mas também pode ser tratado por Diferenças Finitas:</p>
+<p>$$-\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2} = i \hbar \frac{\partial \psi(z,t)}{\partial t},$$</p>
+<p>para:</p>
+<p>$$\psi(z,0) = \frac{1}{ \sqrt[4]{ 2 \pi \sigma_{z}^2 }} \exp \left( i k_\mathrm{0} z - \frac{{\left( z - z_\mathrm{0} \right)}^2}{4 \sigma_{z}^2} \right).$$</p>
+<p>Este problema possui <em>algumas</em> soluções analíticas, mas também pode ser tratado por Diferenças Finitas:</p>
 <ul>
 <li>Runge-Kutta</li>
 <li>Crank-Nicolson</li>
@@ -11927,22 +11976,26 @@ $$\psi(z,0) = \frac{1}{ \sqrt[4]{ 2 \pi \sigma_{z}^2 }} \exp \left( i k_\mathrm{
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <h2 id="Solu&#231;&#227;o-anal&#237;tica-1-(FFT)">Solu&#231;&#227;o anal&#237;tica 1 (FFT)<a class="anchor-link" href="#Solu&#231;&#227;o-anal&#237;tica-1-(FFT)">&#182;</a></h2><p>.
 \begin{equation}
 \Psi(z,t) = \displaystyle\int_{-\infty}^{+\infty} \left( \mathcal{F}[\Psi(z,0)] \, e^{- i \omega(k) t} \right) \, e^{i kz} \, dk,
 \end{equation}</p>
-\begin{equation}
+<p>\begin{equation}
 E(k) = \hbar\omega(k)=\frac{\hbar^2 k^2}{2m} \rightarrow \omega(k)=\frac{\hbar k^2}{2m}
-\end{equation}<h2 id="Solu&#231;&#227;o-anal&#237;tica-2-(Propagador)">Solu&#231;&#227;o anal&#237;tica 2 (Propagador)<a class="anchor-link" href="#Solu&#231;&#227;o-anal&#237;tica-2-(Propagador)">&#182;</a></h2><p>.
+\end{equation}</p>
+<p><br></p>
+<h2 id="Solu&#231;&#227;o-anal&#237;tica-2-(Propagador)">Solu&#231;&#227;o anal&#237;tica 2 (Propagador)<a class="anchor-link" href="#Solu&#231;&#227;o-anal&#237;tica-2-(Propagador)">&#182;</a></h2><p>.
 \begin{equation}
 \Psi(z,t) = \displaystyle\int_{-\infty}^{+\infty} dx' \, J(x,t;x',0) \Psi(z',0)
 \end{equation}</p>
-\begin{equation}
+<p>\begin{equation}
 J(x,t;x',t') = \langle x | e^{-\frac{i H\Delta t}{\hbar}} | x' \rangle
-\end{equation}\begin{equation}
+\end{equation}</p>
+<p>\begin{equation}
 H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
-\end{equation}
+\end{equation}</p>
+
 </div>
 </div>
 </div></section><section>
@@ -11950,7 +12003,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Optamos pela <strong>solução analítica 1</strong>, com fácil implementação:</p>
 
 </div>
@@ -11975,7 +12028,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Evoluímos um pacote de onda de energia $E=150$ eV da posição inicial $z_\mathrm{i} = -20.0$ Å até a posição final $z_\mathrm{f} \approx +20.0$ Å utilizando os métodos:</p>
 <ul>
 <li>Pseudo-Espectral</li>
@@ -12003,7 +12056,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Sobre o desvio padrão e a obliquidade.</p>
 <p><img src="figuras/comparacao_desvpad_obliquidade.png" alt="stdvar_skewness" width="100%" align="center" /></p>
 
@@ -12014,7 +12067,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Parâmetros adequados: $L=100$ Å, $N=1024$ pontos e $\Delta t = 1 \times 10^{-18}$ s.</p>
 <video width="100%" controls>
   <source src="apresentacao/onda_plana_parametros_bons.webm" type="video/mp4">
@@ -12027,7 +12080,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p><strong>Dispersão incorreta</strong> e <strong>obliquidade</strong>: $L=850$ Å, $N=256$ pontos e $\Delta t = 1 \times 10^{-16}$ s.</p>
 <video width="100%" controls>
   <source src="apresentacao/onda_plana_parametros_ruins.webm" type="video/mp4">
@@ -12040,7 +12093,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p><strong>Dispersão incorreta</strong>: $L=850$ Å, $N=256$ pontos e $\Delta t = 1 \times 10^{-16}$ s.</p>
 <video width="100%" controls>
   <source src="apresentacao/onda_plana_parametros_ruins_stdev.webm" type="video/mp4">
@@ -12053,7 +12106,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p><strong>Obliquidade</strong>: $L=850$ Å, $N=256$ pontos e $\Delta t = 1 \times 10^{-16}$ s.</p>
 <video width="100%" controls>
   <source src="apresentacao/onda_plana_parametros_ruins_skew.webm" type="video/mp4">
@@ -12066,13 +12119,14 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Para cada método e para cada combinação de $\{L,N,\Delta t\}$, calculamos:</p>
-\begin{align}
+<p>\begin{align}
     \mathcal{A}(t) = \frac{\int_{-\infty}^{+\infty} |\psi(z,t)|^2 \, dz}{\int_{-\infty}^{+\infty} |\psi(z,0)|^2 \, dz} &amp;\rightarrow \mathbb{A}(t) = \frac{\mathcal{A}(t)-\langle{\mathcal{A}(t)}\rangle}{\sigma(\mathcal{A}(t))}\\
     \mathcal{S}(t) = \sigma\left(|\psi(z,t)|^2\right) &amp;\rightarrow \mathbb{S}(t) = \frac{\mathcal{S}(t)-\langle{\mathcal{S}(t)}\rangle}{\sigma(\mathcal{S}(t))}\\
     \mathcal{G}(t) = \gamma(t) &amp;\rightarrow \mathbb{G}(t) = \frac{\mathcal{G}(t)-\langle{\mathcal{G}(t)}\rangle}{\sigma(\mathcal{G}(t))}\\
-\end{align}
+\end{align}</p>
+
 </div>
 </div>
 </div><div class="fragment">
@@ -12084,9 +12138,10 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 \begin{equation}\label{eq:minkowski_vector}
     \mathbb{X}(t) = (\mathbb{A}(t),\mathbb{S}(t), \mathbb{G}(t))
 \end{equation}</p>
-\begin{equation}\label{eq:minkowski_distance_specific}
+<p>\begin{equation}\label{eq:minkowski_distance_specific}
     D_p (\mathbb{X}(t), \mathbb{Y}(t)) = \left( \displaystyle\sum_{i=1}^3 |\mathbb{X}_i(t)-\mathbb{Y}_i(t)|^p \right)^{1/p}
-\end{equation}<p>Onde $\mathbb{X}(t)$ se refere a evolução numérica e $\mathbb{Y}(t)$ a evolução analítica.</p>
+\end{equation}</p>
+<p>Onde $\mathbb{X}(t)$ se refere a evolução numérica e $\mathbb{Y}(t)$ a evolução analítica.</p>
 
 </div>
 </div>
@@ -12095,7 +12150,7 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
+<h1>Aperfeiçoando Evolução Temporal <small>Pacote de Onda Plana</small></h1><hr>
 <p>Utilizamos a métrica de Minkowski com $p=3$ para verificar que o método Pseudo-Espectral é substancialmente mais rápido e mais preciso para a maioria das combinações de parâmetros:</p>
 <p><img src="figuras/onda_plana_comparacao_minkowski.png" alt="stdvar_skewness" width="100%" align="center" /></p>
 
@@ -12106,19 +12161,23 @@ H = -\frac{\hbar^2}{2m_e} \frac{\partial^2 \psi(z,t)}{\partial z^2}
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
 <p>Escolhemos um problema com solução analítica para testar o método <strong>Pseudo-Espectral</strong>.</p>
-\begin{equation}
+<p>\begin{equation}
 V(z) = \frac{m_\mathrm{e} \omega^2 z^2}{2} \,\,;\,\,E_\mathrm{n} = \hbar \omega \left( \mathrm{n} + \frac{1}{2} \right)
-\end{equation}<p>Cujas autofunções são da forma:</p>
-\begin{equation}
+\end{equation}</p>
+<p>Cujas autofunções são da forma:</p>
+<p>\begin{equation}
 \psi_\mathrm{n} (z) = \frac{1}{\sqrt{2^\mathrm{n} \mathrm{n}!}} \left( \frac{m_\mathrm{e} \omega}{\pi \hbar} \right)^{1/4} \exp \left( - \frac{m_\mathrm{e} \omega z^2}{2 \hbar} \right) H_\mathrm{n} \left( \sqrt{\frac{m_\mathrm{e} \omega}{\hbar}} z\right)
-\end{equation}\begin{equation}
+\end{equation}</p>
+<p>\begin{equation}
 H_\mathrm{n} (z) = (-1)^\mathrm{n} e^{z^2} \frac{d^\mathrm{n}}{dz^\mathrm{n}} e^{-z^2}
-\end{equation}<p>Para estimar o erro, escolhemos a distância euclidiana quadrada:</p>
-\begin{equation}
+\end{equation}</p>
+<p>Para estimar o erro, escolhemos a distância euclidiana quadrada:</p>
+<p>\begin{equation}
 D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varphi_\mathrm{n} (z_\mathrm{i}) - \psi_\mathrm{n} (z_\mathrm{i})|^2}
-\end{equation}<p>Onde $\varphi_\mathrm{n}$ é a solução numérica e $\psi_\mathrm{n}$ a solução analítica.</p>
+\end{equation}</p>
+<p>Onde $\varphi_\mathrm{n}$ é a solução numérica e $\psi_\mathrm{n}$ a solução analítica.</p>
 
 </div>
 </div>
@@ -12127,7 +12186,7 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
 <p>Níves de energia para $\lambda =8,1 \mu$m, onde $\omega=2\pi c / \lambda$ e $c$ a velocidade da luz no vácuo.</p>
 <p><img src="figuras/oscilador_harmonico_autovetores_2.png" alt="oscilador_harmonico_autovetores_2" width="100%" class="center" align="center" /></p>
 
@@ -12138,7 +12197,7 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
 <p>Evolução em tempo imaginário utilizando o método <strong>Pseudo-Espectral</strong>:</p>
 <video width="100%" controls>
   <source src="apresentacao/oscilador_harmonico_evoluindo.webm" type="video/mp4">
@@ -12151,7 +12210,7 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Oscilador Harmônico Quântico</small></h1><hr>
 <p>Calculamos a precisão dos resultados utilizando a distância euclidiana quadrada $D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n})$ entre os autovetores numéricos ($\varphi_\mathrm{n}$) e analíticos ($\psi_\mathrm{n}$):</p>
 <p><img src="figuras/oscilador_harmonico_erro_por_tempo.png" alt="oscilador_harmonico_erro_por_tempo" width="100%" align="center" /></p>
 
@@ -12162,19 +12221,21 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
 <p>Testamos o método Pseudo-Espectral para um potencial mais semelhante a uma heteroestrutura semicondutora.</p>
-\begin{equation}
+<p>\begin{equation}
     V(z)=
     \begin{cases}
         0, &amp; |z| \leq a/2 \\
         V_\mathrm{b}, &amp; |z| &gt; a/2,
     \end{cases}
-\end{equation}<p>Com soluções analíticas:</p>
-\begin{align}
+\end{equation}</p>
+<p>Com soluções analíticas:</p>
+<p>\begin{align}
     \tan \left( \sqrt{\frac{a^2 m_\mathrm{e}^* E_\mathrm{n}}{2 \hbar^2}} \right) = \sqrt{\frac{(V_\mathrm{b}-E_\mathrm{n})}{E_\mathrm{n}}} &amp; \rightarrow f(E_\mathrm{n}) = \tan \left( \sqrt{\frac{a^2 m_\mathrm{e}^* E_\mathrm{n}}{2 \hbar^2}} \right) - \sqrt{\frac{(V_\mathrm{b}-E_\mathrm{n})}{E_\mathrm{n}}} = 0 \\
     \cot \left( \sqrt{\frac{a^2 m_\mathrm{e}^* E_\mathrm{n}}{2 \hbar^2}} \right) = -\sqrt{\frac{(V_\mathrm{b}-E_\mathrm{n})}{E_\mathrm{n}}} &amp; \rightarrow g(E_\mathrm{n}) = \cot \left( \sqrt{\frac{a^2 m_\mathrm{e}^* E_\mathrm{n}}{2 \hbar^2}} \right) +\sqrt{\frac{(V_\mathrm{b}-E_\mathrm{n})}{E_\mathrm{n}}} = 0
-\end{align}
+\end{align}</p>
+
 </div>
 </div>
 </div></section><section>
@@ -12182,7 +12243,7 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
 <p>Calculamos os autovalores e autovetores para poços de $1.0$ eV de altura com diferentes larguras:</p>
 <p><img src="figuras/poco_quantico_numerico_e_analitico.png" alt="oscilador_harmonico_erro_por_tempo" width="100%" align="center" /></p>
 
@@ -12193,7 +12254,7 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </div>
 <div class="inner_cell">
 <div class="text_cell_render border-box-sizing rendered_html">
-<h1>Dominando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
+<h1>Calculando Autovalores e Autovetores <small>Poço Quadrado Finito</small></h1><hr>
 <p>Autoenergias de um elétron de massa $m_\mathrm{e}$ dentro de poço quântico de altura $1.0$ eV e largura $50.0$ Å.</p>
 <table width="100%">
 <thead>
@@ -12223,6 +12284,20 @@ D_\mathrm{e} (\varphi_\mathrm{n},\psi_\mathrm{n}) = \sqrt{\sum_\mathrm{i} |\varp
 </table>
 </div>
 </div>
+</div></section></section><section><section>
+<div class="cell border-box-sizing text_cell rendered"><div class="prompt input_prompt">
+</div>
+<div class="inner_cell">
+<div class="text_cell_render border-box-sizing rendered_html">
+<h1>Calculando Autovalores e Autovetores <small>Poço Duplo Assimétrico</small></h1><hr>
+<p>É um poço dado pelo potencial:</p>
+<p>\begin{equation}
+    V(x) = - k_\mathrm{2} x^2 + k_\mathrm{3} x^3 + k_\mathrm{4} x^4
+\end{equation}</p>
+<p>onde $k_\mathrm{2} = +7,0$, $k_\mathrm{3}=+0,5$ e $k_\mathrm{4}=+0,1$, para um elétron de massa $m_\mathrm{e}^*=0,5$, sendo todos os valores em unidades atômicas.</p>
+
+</div>
+</div>
 </div></section></section>
 </div>
 </div>
@@ -12248,8 +12323,7 @@ require(
             progress: true,
             history: true,
 
-            theme: Reveal.getQueryHash().theme, // available themes are in /css/theme
-            transition: Reveal.getQueryHash().transition || 'linear', // default/cube/page/concave/zoom/linear/none
+            transition: "slide",
 
             // Optional libraries used to extend on reveal.js
             dependencies: [
@@ -12269,13 +12343,25 @@ require(
 
         Reveal.addEventListener('slidechanged', update);
 
-        var update_scroll = function(event){
-          $(".reveal").scrollTop(0);
-        };
+        function setScrollingSlide() {
+            var scroll = false
+            if (scroll === true) {
+              var h = $('.reveal').height() * 0.95;
+              $('section.present').find('section')
+                .filter(function() {
+                  return $(this).height() > h;
+                })
+                .css('height', 'calc(95vh)')
+                .css('overflow-y', 'scroll')
+                .css('margin-top', '20px');
+            }
+        }
 
-        Reveal.addEventListener('slidechanged', update_scroll);
+        // check and set the scrolling slide every time the slide change
+        Reveal.addEventListener('slidechanged', setScrollingSlide);
 
     }
+
 );
 </script>
 
