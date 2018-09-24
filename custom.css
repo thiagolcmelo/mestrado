@@ -1,5 +1,4 @@
-/*
-@import url(http://fonts.googleapis.com/css?family=Lato|Source+Code+Pro|Montserrat:400,700);
+/*@import url(http://fonts.googleapis.com/css?family=Lato|Source+Code+Pro|Montserrat:400,700);
 #notebook-container {
 -webkit-box-shadow: none;
 box-shadow: none;
@@ -35,8 +34,7 @@ img {
 display: block;
 margin-left: auto;
 margin-right: auto;
-}
-*/
+}*/
 
 
 /**
@@ -56,11 +54,11 @@ html * {
  *********************************************/
 body {
   background: #fdf6e3;
-  background-color: #fdf6e3; }
+  background-color: #fdf6e3;}
 
 .reveal {
   font-family: "Lato", sans-serif;
-  font-size: 18px;
+  font-size: 20px;
   font-weight: normal;
   color: #657b83; }
 
@@ -94,7 +92,7 @@ body {
   font-weight: normal;
   line-height: 1.2;
   letter-spacing: normal;
-  text-transform: uppercase;
+  /*text-transform: uppercase;*/
   text-shadow: none;
   word-wrap: break-word; }
 
@@ -113,12 +111,17 @@ body {
 .reveal h1 {
   text-shadow: none; }
 
+h1.master {
+    font-size: 1.7em !important;
+    font-weight: bold  !important;
+}
+
 /*********************************************
  * OTHER
  *********************************************/
 .reveal p {
-  margin: 20px 0;
-  line-height: 1.3; }
+  margin: 15px 0;
+  line-height: 1.5;
 
 /* Ensure certain elements are never larger than the slide itself */
 .reveal img,

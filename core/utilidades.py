@@ -2,6 +2,7 @@
 # -*- coding: utf-8 -*-
 
 # python standard
+import time
 
 # third-party
 import numpy as np
@@ -41,6 +42,43 @@ def idf(v: list, i: float) -> float:
     up = i - float(i_down)
     down = float(i_up) - i
     return v[i_up] * up + v[i_down] * down
+
+def dummy_comma(str_number:str)->str:
+    """
+    troca separador decimal '.' para ','... 
+    é preciso ser assim em alguns casos
+    
+    Parâmetros
+    ----------
+    str_number : string
+        um string para troca '.' por ','
+    
+    Retorno
+    -------
+    uma string
+    """
+    c2at = str_number.replace(',', '@@')
+    d2c = c2at.replace('.', ',')
+    return d2c.replace('@@', '.')
+
+def as_si(x:float, ndp:int)->str:
+    """
+    coloca um número [x] em no si com ndp casas decimais
+    
+    Parâmetros
+    ----------
+    x : float
+        um numero real
+    ndp : int
+        o número de casas decimais
+    
+    Retorno
+    -------
+    O número x formatado em notação cientídica com ndp casas
+    """
+    s = '{x:0.{ndp:d}e}'.format(x=x, ndp=ndp)
+    m, e = s.split('e')
+    return dummy_comma(r'{m:s}\times 10^{{{e:d}}}'.format(m=m, e=int(e)))
 
 
 def derivada_muda_pct(x:list, y:list, n:int=10, pct:float=0.05)->float:
@@ -135,6 +173,25 @@ def autovalor(z: list, V: list, psi: list, m: list) -> float:
     return (psi_h_psi / simps(psi.conj()*psi, z)).real
 
 
+def normaliza(z:list, psi:list)->tuple:
+    """
+    normaliza uma função de onda psi para um espaço z
+    
+    Parâmetros
+    ----------
+    z : array_like
+        o eixo z
+    psi : array_like
+    
+    Retorno
+    -------
+    Psi / sqrt(<Psi|Psi>),sqrt(<Psi|Psi>)
+    """
+    psi = np.array(psi)
+    psi2 = psi * psi.conj()
+    A = np.sqrt(simps(psi2, z))
+    return psi / A, A
+
 def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
                       autovalores:list=[],
                       remover_repetidos:bool=True)->dict:
@@ -181,6 +238,7 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
     z = np.array(z)
     V = np.array(V)
     m = np.array(m)
+    N = z.size
     
     # precisão mínima esperada
     precisao = 1e-9
@@ -191,6 +249,7 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
     # da interação inversa
     if len(autovalores) > 0:
         previsao = autovalores[:]
+        nmax = len(previsao)
     else:
         previsao = np.linspace(V.min(), V.max(), nmax)
     
@@ -236,24 +295,21 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
             start_time = time.time()
             autovetores[s] = invA.dot(autovetores[s])
             contadores[s] += 1
-
             # normaliza
-            A = np.sqrt(simps(autovetores[s]*autovetores[s].conj(), z))
-            autovetores[s] /= A
+            autovetores[s], _ = normaliza(z, autovetores[s])
             cronometros[s] += time.time() - start_time
             autovalores[s] = autovalor(z, V_shifted,
                                         autovetores[s], m) + shift
-
             # confere precisao
             precisoes[s] = np.abs(1-autovalores[s]/last_ev)
             last_ev = autovalores[s]
             if precisoes[s] < precisao:
+                # calcula convergência
                 XA = [np.abs(autovetores[s])**2]
                 XB = [np.abs(last_es)**2]
                 euclides2[s] = cdist(XA, XB, 'sqeuclidean')[0][0]
                 break
-
-            last_es = np.copy(eigenstates[s])
+            last_es = np.copy(autovetores[s])
 
 
     if remover_repetidos:
@@ -261,7 +317,7 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
         # região de interesse, por isso vamos removê-los
         sort_index = autovalores.argsort()
         autovalores = autovalores[sort_index]
-        eigenstates = eigenstates[sort_index]
+        autovetores = autovetores[sort_index]
 
         iz_left = derivada_muda_pct(z, V)
         iz_right = len(V)-derivada_muda_pct(z, V[::-1])
@@ -274,7 +330,7 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
                 or autovalores[i] > np.max(V):
                 continue
             # remove os estados nao confinados lateralmente
-            state = eigenstates[i].copy()
+            state = autovetores[i].copy()
             state_l = state[:iz_left]
             state_m = state[iz_left:iz_right]
             state_r = state[iz_right:]
