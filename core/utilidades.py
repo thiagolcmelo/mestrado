@@ -187,7 +187,8 @@ def normaliza(z:list, psi:list)->tuple:
     -------
     Psi / sqrt(<Psi|Psi>),sqrt(<Psi|Psi>)
     """
-    psi = np.array(psi)
+    z = np.array(z)
+    psi = np.array(psi, dtype=np.complex_)
     psi2 = psi * psi.conj()
     A = np.sqrt(simps(psi2, z))
     return psi / A, A
@@ -251,7 +252,8 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
         previsao = autovalores[:]
         nmax = len(previsao)
     else:
-        previsao = np.linspace(V.min(), V.max(), nmax)
+        span = np.ptp(V) * 0.1
+        previsao = np.linspace(V.min() - span, V.max() + span, nmax)
     
     # aqui esperamos dz constante
     dz = z[1]-z[0]
