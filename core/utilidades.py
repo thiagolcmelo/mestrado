@@ -252,8 +252,12 @@ def interacao_inversa(z: list, V: list, m: list, nmax:int=20,
         previsao = autovalores[:]
         nmax = len(previsao)
     else:
-        span = np.ptp(V) * 0.1
-        previsao = np.linspace(V.min() - span, V.max() + span, nmax)
+        # util para calcular somente o estado fundamental
+        if nmax == 1:
+            previsao = np.array([V.min()])
+        else:
+            span = np.ptp(V) * 0.1
+            previsao = np.linspace(V.min() - span, V.max() + span, nmax)
     
     # aqui esperamos dz constante
     dz = z[1]-z[0]
