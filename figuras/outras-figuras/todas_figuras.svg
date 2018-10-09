@@ -25,6 +25,62 @@
     <marker
        inkscape:isstock="true"
        style="overflow:visible"
+       id="marker7663"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="TriangleOutM">
+      <path
+         transform="scale(0.4)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         id="path7661" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
+       id="marker7155"
+       refX="0.0"
+       refY="0.0"
+       orient="auto"
+       inkscape:stockid="TriangleInM">
+      <path
+         transform="scale(-0.4)"
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         id="path7153" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleOutM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker6617"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path6615"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(0.4)" />
+    </marker>
+    <marker
+       inkscape:stockid="TriangleInM"
+       orient="auto"
+       refY="0.0"
+       refX="0.0"
+       id="marker6121"
+       style="overflow:visible"
+       inkscape:isstock="true">
+      <path
+         id="path6119"
+         d="M 5.77,0.0 L -2.88,5.0 L -2.88,-5.0 L 5.77,0.0 z "
+         style="fill-rule:evenodd;stroke:#000000;stroke-width:1pt;stroke-opacity:1;fill:#000000;fill-opacity:1"
+         transform="scale(-0.4)" />
+    </marker>
+    <marker
+       inkscape:isstock="true"
+       style="overflow:visible"
        id="marker28300"
        refX="0.0"
        refY="0.0"
@@ -1493,8 +1549,8 @@
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
      inkscape:zoom="1"
-     inkscape:cx="-2322.3799"
-     inkscape:cy="-59.641815"
+     inkscape:cx="396.86352"
+     inkscape:cy="731.34827"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -2674,7 +2730,9 @@
          id="tspan8261"
          x="147.86642"
          y="93.645432"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.24938171">x ~ cm</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.24938171"><tspan
+   style="font-style:italic"
+   id="tspan6081">x</tspan> ~ cm</tspan></text>
     <text
        id="text8267"
        y="65.754951"
@@ -2687,7 +2745,9 @@
          y="65.754951"
          x="154.15086"
          id="tspan8265"
-         sodipodi:role="line">y ~ cm</tspan></text>
+         sodipodi:role="line"><tspan
+   style="font-style:italic"
+   id="tspan6085">y</tspan> ~ cm</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:9.97526932px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.24938171"
@@ -2700,7 +2760,9 @@
          id="tspan8269"
          x="160.06331"
          y="82.257103"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.24938171">z ~ Å</tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.24938171"><tspan
+   style="font-style:italic"
+   id="tspan6083">z</tspan> ~ Å</tspan></text>
     <path
        style="fill:none;stroke:#000000;stroke-width:0.3702803;stroke-linecap:butt;stroke-linejoin:miter;stroke-miterlimit:4;stroke-dasharray:none;stroke-opacity:1;marker-start:url(#marker8311);marker-end:url(#marker8405)"
        d="M 34.706096,98.700847 V 161.29403 H 151.0967"
@@ -2780,7 +2842,7 @@
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
-       style="fill:none;stroke:#000000;stroke-width:0.3702803px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker11295);marker-end:url(#marker11407)"
+       style="fill:none;stroke:#000000;stroke-width:0.3702803px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker7155);marker-end:url(#marker7663)"
        d="m 82.538269,108.83192 v 17.98575"
        id="path11291"
        inkscape:connector-curvature="0"
@@ -2792,7 +2854,7 @@
        inkscape:connector-curvature="0"
        id="path11739"
        d="m 82.538269,151.74617 v 8.32194"
-       style="fill:none;stroke:#000000;stroke-width:0.3702803px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker11743);marker-end:url(#marker11867)"
+       style="fill:none;stroke:#000000;stroke-width:0.3702803px;stroke-linecap:butt;stroke-linejoin:miter;stroke-opacity:1;marker-start:url(#marker6121);marker-end:url(#marker6617)"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300" />
     <path
@@ -2934,7 +2996,9 @@
          y="169.11002"
          x="149.46982"
          id="tspan19539"
-         sodipodi:role="line">z (Å)</tspan></text>
+         sodipodi:role="line"><tspan
+   style="font-style:italic"
+   id="tspan6105">z</tspan> (Å)</tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:9.28637981px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.23215948"
@@ -2947,11 +3011,15 @@
          id="tspan19861"
          x="46.10215"
          y="177.92682"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.23215948">N<tspan
-   style="font-size:4.33364439px;stroke-width:0.23215948"
-   id="tspan19865">1 </tspan>a<tspan
-   style="font-size:4.33364439px;stroke-width:0.23215948"
-   id="tspan19871">AlGaAs</tspan></tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.23215948"><tspan
+           style="font-style:italic"
+           id="tspan6093">N</tspan><tspan
+           style="font-size:4.33364439px;stroke-width:0.23215948"
+           id="tspan19865">1 </tspan><tspan
+           style="font-style:italic"
+           id="tspan6095">a</tspan><tspan
+           style="font-size:4.33364439px;stroke-width:0.23215948"
+           id="tspan19871">AlGaAs</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:9.28637981px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.23215948"
@@ -2964,11 +3032,15 @@
          id="tspan19885"
          x="81.323425"
          y="177.92682"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.23215948">N<tspan
-   style="font-size:4.33364439px;stroke-width:0.23215948"
-   id="tspan19881">2 </tspan>a<tspan
-   style="font-size:4.33364439px;stroke-width:0.23215948"
-   id="tspan19883">GaAs</tspan></tspan></text>
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.23215948"><tspan
+           style="font-style:italic"
+           id="tspan6097">N</tspan><tspan
+           style="font-size:4.33364439px;stroke-width:0.23215948"
+           id="tspan19881">2 </tspan><tspan
+           style="font-style:italic"
+           id="tspan6099">a</tspan><tspan
+           style="font-size:4.33364439px;stroke-width:0.23215948"
+           id="tspan19883">GaAs</tspan></tspan></text>
     <text
        id="text19879"
        y="177.92682"
@@ -2981,37 +3053,32 @@
          y="177.92682"
          x="112.21106"
          id="tspan19877"
-         sodipodi:role="line">N<tspan
-   id="tspan19873"
-   style="font-size:4.33364439px;stroke-width:0.23215948">3 </tspan>a<tspan
-   id="tspan19875"
-   style="font-size:4.33364439px;stroke-width:0.23215948">AlGaAs</tspan></tspan></text>
-    <text
-       id="text19895"
-       y="158.48875"
-       x="85.300446"
-       style="font-style:normal;font-weight:normal;font-size:7.98059177px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.19951479"
-       xml:space="preserve"
-       inkscape:export-xdpi="300"
-       inkscape:export-ydpi="300"><tspan
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.19951479"
-         y="158.48875"
-         x="85.300446"
-         id="tspan19893"
-         sodipodi:role="line">VBO</tspan></text>
+         sodipodi:role="line"><tspan
+           style="font-style:italic"
+           id="tspan6101">N</tspan><tspan
+           id="tspan19873"
+           style="font-size:4.33364439px;stroke-width:0.23215948">3 </tspan><tspan
+           style="font-style:italic"
+           id="tspan6103">a</tspan><tspan
+           id="tspan19875"
+           style="font-size:4.33364439px;stroke-width:0.23215948">AlGaAs</tspan></tspan></text>
     <text
        xml:space="preserve"
        style="font-style:normal;font-weight:normal;font-size:7.98059177px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.19951479"
        x="85.399811"
-       y="120.42783"
+       y="119.63684"
        id="text19891"
        inkscape:export-xdpi="300"
        inkscape:export-ydpi="300"><tspan
          sodipodi:role="line"
          id="tspan19889"
          x="85.399811"
-         y="120.42783"
-         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.19951479">CBO</tspan></text>
+         y="119.63684"
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.19951479">Δ<tspan
+   style="font-style:italic"
+   id="tspan6109">E</tspan><tspan
+   style="font-size:4.93888903px;baseline-shift:sub"
+   id="tspan6107">c</tspan></tspan></text>
     <g
        id="g19941"
        transform="translate(-10.186458,-2.9089069)"
@@ -3027,9 +3094,11 @@
            y="140.89787"
            x="59.634514"
            id="tspan19897"
-           sodipodi:role="line">E<tspan
-   id="tspan19901"
-   style="font-size:4.93888903px">g</tspan></tspan></text>
+           sodipodi:role="line"><tspan
+             style="font-style:italic"
+             id="tspan6087">E</tspan><tspan
+             id="tspan19901"
+             style="font-size:4.93888903px">g</tspan></tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:7.30932951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.18273322"
@@ -3059,9 +3128,11 @@
            id="tspan19945"
            x="59.634514"
            y="140.89787"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.26458332">E<tspan
-   style="font-size:4.93888903px"
-   id="tspan19943">g</tspan></tspan></text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.26458332"><tspan
+             style="font-style:italic"
+             id="tspan6091">E</tspan><tspan
+             style="font-size:4.93888903px"
+             id="tspan19943">g</tspan></tspan></text>
       <text
          id="text19953"
          y="135.18338"
@@ -3091,9 +3162,11 @@
            y="140.89787"
            x="59.634514"
            id="tspan19959"
-           sodipodi:role="line">E<tspan
-   id="tspan19957"
-   style="font-size:4.93888903px">g</tspan></tspan></text>
+           sodipodi:role="line"><tspan
+             style="font-style:italic"
+             id="tspan6089">E</tspan><tspan
+             id="tspan19957"
+             style="font-size:4.93888903px">g</tspan></tspan></text>
       <text
          xml:space="preserve"
          style="font-style:normal;font-weight:normal;font-size:7.30932951px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.18273322"
@@ -7050,5 +7123,22 @@
          sodipodi:role="line">z<tspan
    id="tspan30306"
    style="font-size:3.52777767px">R</tspan></tspan></text>
+    <text
+       inkscape:export-ydpi="300"
+       inkscape:export-xdpi="300"
+       id="text6117"
+       y="158.81058"
+       x="85.399811"
+       style="font-style:normal;font-weight:normal;font-size:7.98059177px;line-height:1.25;font-family:sans-serif;letter-spacing:0px;word-spacing:0px;fill:#000000;fill-opacity:1;stroke:none;stroke-width:0.19951479"
+       xml:space="preserve"><tspan
+         style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.19951479"
+         y="158.81058"
+         x="85.399811"
+         id="tspan6115"
+         sodipodi:role="line">Δ<tspan
+   id="tspan6111"
+   style="font-style:italic">E</tspan><tspan
+   id="tspan6113"
+   style="font-size:4.93888903px;baseline-shift:sub">v</tspan></tspan></text>
   </g>
 </svg>
