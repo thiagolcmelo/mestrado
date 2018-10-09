@@ -508,9 +508,9 @@
      borderopacity="1.0"
      inkscape:pageopacity="0.0"
      inkscape:pageshadow="2"
-     inkscape:zoom="2"
-     inkscape:cx="230.78359"
-     inkscape:cy="651.97926"
+     inkscape:zoom="1"
+     inkscape:cx="311.19164"
+     inkscape:cy="612.24524"
      inkscape:document-units="mm"
      inkscape:current-layer="layer1"
      showgrid="false"
@@ -529,7 +529,7 @@
         <dc:format>image/svg+xml</dc:format>
         <dc:type
            rdf:resource="http://purl.org/dc/dcmitype/StillImage" />
-        <dc:title></dc:title>
+        <dc:title />
       </cc:Work>
     </rdf:RDF>
   </metadata>
@@ -806,9 +806,11 @@
            id="tspan8997"
            x="58.167545"
            y="100.35914"
-           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3499999px;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.26458332">VBO<tspan
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Tinos;-inkscape-font-specification:Tinos;baseline-shift:super"
-   id="tspan8995">GaAs</tspan></tspan></text>
+           style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:6.3499999px;font-family:Tinos;-inkscape-font-specification:Tinos;stroke-width:0.26458332"><tspan
+             style="font-style:italic"
+             id="tspan4856">VBO</tspan><tspan
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Tinos;-inkscape-font-specification:Tinos;baseline-shift:super"
+             id="tspan8995">GaAs</tspan></tspan></text>
     </g>
     <g
        id="g16083"
@@ -883,9 +885,11 @@
            y="100.35914"
            x="58.167545"
            id="tspan13569"
-           sodipodi:role="line">VBO<tspan
-   id="tspan13567"
-   style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Tinos;-inkscape-font-specification:Tinos;baseline-shift:super">InGaAs</tspan></tspan></text>
+           sodipodi:role="line"><tspan
+             style="font-style:italic"
+             id="tspan4858">VBO</tspan><tspan
+             id="tspan13567"
+             style="font-style:normal;font-variant:normal;font-weight:normal;font-stretch:normal;font-size:3.52777767px;font-family:Tinos;-inkscape-font-specification:Tinos;baseline-shift:super">InGaAs</tspan></tspan></text>
     </g>
     <rect
        y="121.33121"
@@ -1027,7 +1031,7 @@
        inkscape:export-ydpi="300"
        inkscape:export-xdpi="300"
        id="path21788"
-       style="fill:#e6e685;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.81915164;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       style="fill:#ff4833;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.81915164;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
        d="m 72.985708,68.784471 -8.336582,7.481855 67.780224,0.02771 8.24236,-7.448434 z"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
@@ -1043,7 +1047,7 @@
        inkscape:export-ydpi="300"
        inkscape:export-xdpi="300"
        id="path21792"
-       style="fill:#dedb51;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.81915164;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
+       style="fill:#ff2f1d;fill-opacity:1;fill-rule:evenodd;stroke:none;stroke-width:3.81915164;stroke-linecap:round;stroke-linejoin:round;stroke-miterlimit:4;stroke-dasharray:none;stroke-dashoffset:0;stroke-opacity:1;paint-order:fill markers stroke"
        d="M 64.649126,76.266326 V 94.89376 l 67.780224,-0.0556 V 76.294164 Z"
        inkscape:connector-curvature="0"
        sodipodi:nodetypes="ccccc" />
